@@ -7,42 +7,50 @@ using System;
 using System.Windows;
 using static System.String;
 
-namespace Wpf.Ui.Controls;
-
-/// <summary>
-/// Button that opens a URL in a web browser.
-/// </summary>
-public class Hyperlink : Wpf.Ui.Controls.Button
+namespace Wpf.Ui.Controls
 {
     /// <summary>
-    /// Property for <see cref="NavigateUri"/>.
+    /// Button that opens a URL in a web browser.
     /// </summary>
-    public static readonly DependencyProperty NavigateUriProperty = DependencyProperty.Register("NavigateUri",
-        typeof(string), typeof(Hyperlink), new PropertyMetadata(Empty));
-
-    /// <summary>
-    /// The URL (or application shortcut) to open.
-    /// </summary>
-    public string NavigateUri
+    public sealed class Hyperlink : Wpf.Ui.Controls.Button
     {
-        get => GetValue(NavigateUriProperty) as string;
-        set => SetValue(NavigateUriProperty, value);
-    }
+        /// <summary>
+        /// DependencyProperty for <see cref="NavigateUri"/>.
+        /// </summary>
+        public static readonly DependencyProperty NavigateUriProperty = DependencyProperty.Register(
+            nameof(NavigateUri),
+            typeof(string),
+            typeof(Hyperlink),
+            new PropertyMetadata(Empty));
 
-    /// <summary>
-    /// Action triggered when the button is clicked.
-    /// </summary>
-    public Hyperlink() => Click += RequestNavigate;
-
-    private void RequestNavigate(object sender, RoutedEventArgs eventArgs)
-    {
-        if (IsNullOrEmpty(NavigateUri))
-            return;
-        System.Diagnostics.ProcessStartInfo sInfo = new(new Uri(NavigateUri).AbsoluteUri)
+        /// <summary>
+        /// The URL (or application shortcut) to open.
+        /// </summary>
+        public string NavigateUri
         {
-            UseShellExecute = true
-        };
+            get => GetValue(NavigateUriProperty) as string ?? Empty;
+            set => SetValue(NavigateUriProperty, value);
+        }
 
-        System.Diagnostics.Process.Start(sInfo);
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Hyperlink"/> class.
+        /// </summary>
+        public Hyperlink() => Click += OnClick;
+
+        private void OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(NavigateUri))
+                return;
+
+            if (!Uri.TryCreate(NavigateUri, UriKind.Absolute, out var uri))
+                return;
+
+            var processStartInfo = new System.Diagnostics.ProcessStartInfo(uri.AbsoluteUri)
+            {
+                UseShellExecute = true
+            };
+
+            System.Diagnostics.Process.Start(processStartInfo);
+        }
     }
 }

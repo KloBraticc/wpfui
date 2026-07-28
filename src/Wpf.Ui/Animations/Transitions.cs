@@ -1,170 +1,200 @@
-﻿// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
-// Copyright (C) Leszek Pomianowski and WPF UI Contributors.
-// All Rights Reserved.
-
-using System;
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using Wpf.Ui.Hardware;
 
-namespace Wpf.Ui.Animations;
-
-/// <summary>
-/// Provides tools for <see cref="FrameworkElement"/> animation.
-/// </summary>
-public static class Transitions
+namespace Wpf.Ui.Animations
 {
-    private const double DecelerationRatio = 0.7;
-
-    /// <summary>
-    /// Attempts to apply an animation effect while adding content to the frame.
-    /// </summary>
-    /// <param name="element">Currently rendered element.</param>
-    /// <param name="type">Selected transition type.</param>
-    /// <param name="duration">Transition duration.</param>
-    public static bool ApplyTransition(object element, TransitionType type, int duration)
+    public static class AnimationState
     {
-        if (type == TransitionType.None)
-            return false;
+        public static bool IsLoading { get; set; }
+    }
 
-        // Disable transitions for non-accelerated devices.
-        if (!HardwareAcceleration.IsSupported(RenderingTier.PartialAcceleration))
-            return false;
-
-        if (element is not FrameworkElement frameworkElement)
-            return false;
-
-        if (duration < 10)
-            return false;
-
-        if (duration > 10000)
-            duration = 10000;
-
-        var timespanDuration = new Duration(TimeSpan.FromMilliseconds(duration));
-
-        switch (type)
+    internal static class Easings
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Smooth(double t)
         {
-            case TransitionType.FadeIn:
-                FadeInTransition(frameworkElement, timespanDuration);
-                break;
-
-            case TransitionType.FadeInWithSlide:
-                FadeInWithSlideTransition(frameworkElement, timespanDuration);
-                break;
-
-            case TransitionType.SlideBottom:
-                SlideBottomTransition(frameworkElement, timespanDuration);
-                break;
-
-            case TransitionType.SlideRight:
-                SlideRightTransition(frameworkElement, timespanDuration);
-                break;
-
-            case TransitionType.SlideLeft:
-                SlideLeftTransition(frameworkElement, timespanDuration);
-                break;
+            t = t * t * (3 - 2 * t);
+            return t + Math.Sin(t * Math.PI) * 0.05;
         }
 
-        return true;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Fade(double t)
+        {
+            return t * t * (3 - 2 * t);
+        }
     }
 
-    private static void FadeInTransition(FrameworkElement navigatedElement, Duration duration)
+    internal sealed class FrameAnimator
     {
-        var opacityDoubleAnimation = new DoubleAnimation
-        {
-            Duration = duration,
-            DecelerationRatio = DecelerationRatio,
-            From = 0.0,
-            To = 1.0,
-        };
+        private readonly Action<double> _update;
+        private readonly Action? _completed;
+        private readonly double _durationMs;
 
-        navigatedElement.BeginAnimation(UIElement.OpacityProperty, opacityDoubleAnimation);
+        private readonly Stopwatch _watch = new();
+        private bool _running;
+
+        public FrameAnimator(double durationMs, Action<double> update, Action? completed = null)
+        {
+            _durationMs = durationMs;
+            _update = update;
+            _completed = completed;
+        }
+
+        public void Start()
+        {
+            if (_running)
+                return;
+
+            _running = true;
+            _watch.Restart();
+            CompositionTarget.Rendering += OnRendering;
+        }
+
+        private void OnRendering(object? sender, EventArgs e)
+        {
+            if (AnimationState.IsLoading)
+            {
+                Stop();
+                return;
+            }
+
+            var elapsed = _watch.Elapsed.TotalMilliseconds;
+            var t = elapsed / _durationMs;
+
+            if (t >= 1.0)
+            {
+                _update(1.0);
+                Stop();
+                return;
+            }
+
+            _update(t);
+        }
+
+        private void Stop()
+        {
+            if (!_running)
+                return;
+
+            _running = false;
+            _watch.Stop();
+            CompositionTarget.Rendering -= OnRendering;
+            _completed?.Invoke();
+        }
     }
 
-    private static void FadeInWithSlideTransition(FrameworkElement navigatedElement, Duration duration)
+    public static class Transitions
     {
-        var translateDoubleAnimation = new DoubleAnimation
+        private const int MinDuration = 260;
+        private const int MaxDuration = 1250;
+
+        public static bool ApplyTransition(
+            object element,
+            TransitionType type,
+            int duration)
         {
-            Duration = duration,
-            DecelerationRatio = DecelerationRatio,
-            From = 30,
-            To = 0,
-        };
+            if (type == TransitionType.None ||
+                element is not FrameworkElement fe ||
+                AnimationState.IsLoading ||
+                !HardwareAcceleration.IsSupported(
+                    HardwareAcceleration.RenderingTier.PartialAcceleration))
+            {
+                return false;
+            }
 
-        if (navigatedElement.RenderTransform is not TranslateTransform)
-            navigatedElement!.RenderTransform = new TranslateTransform(0, 0);
+            duration = Math.Clamp(duration, MinDuration, MaxDuration);
 
-        if (!navigatedElement.RenderTransformOrigin.Equals(new Point(0.5, 0.5)))
-            navigatedElement!.RenderTransformOrigin = new Point(0.5, 0.5);
+            switch (type)
+            {
+                case TransitionType.FadeIn:
+                    FadeIn(fe, duration);
+                    break;
 
-        navigatedElement.RenderTransform.BeginAnimation(TranslateTransform.YProperty, translateDoubleAnimation);
+                case TransitionType.SlideBottom:
+                    Slide(fe, 0, 40, duration, false);
+                    break;
 
-        var opacityDoubleAnimation = new DoubleAnimation
+                case TransitionType.SlideRight:
+                    Slide(fe, 50, 0, duration, false);
+                    break;
+
+                case TransitionType.SlideLeft:
+                    Slide(fe, -50, 0, duration, false);
+                    break;
+
+                case TransitionType.FadeInWithSlide:
+                    Slide(fe, 0, 40, duration, true);
+                    break;
+
+                case TransitionType.FadeInWithSlideRight:
+                    Slide(fe, 50, 0, duration, true);
+                    break;
+
+                default:
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static void FadeIn(FrameworkElement element, int durationMs)
         {
-            Duration = duration,
-            DecelerationRatio = DecelerationRatio,
-            From = 0.0,
-            To = 1.0,
-        };
-        navigatedElement.BeginAnimation(UIElement.OpacityProperty, opacityDoubleAnimation);
-    }
+            element.Opacity = 0;
 
-    private static void SlideBottomTransition(FrameworkElement navigatedElement, Duration duration)
-    {
-        var translateDoubleAnimation = new DoubleAnimation
+            var animator = new FrameAnimator(
+                durationMs,
+                t => element.Opacity = Easings.Fade(t),
+                () => element.Opacity = 1);
+
+            animator.Start();
+        }
+
+        private static void Slide(
+            FrameworkElement element,
+            double offsetX,
+            double offsetY,
+            int durationMs,
+            bool fade)
         {
-            Duration = duration,
-            DecelerationRatio = DecelerationRatio,
-            From = 30,
-            To = 0,
-        };
+            if (element.RenderTransform is not TranslateTransform transform)
+            {
+                transform = new TranslateTransform();
+                element.RenderTransform = transform;
+            }
 
-        if (navigatedElement.RenderTransform is not TranslateTransform)
-            navigatedElement!.RenderTransform = new TranslateTransform(0, 0);
+            element.RenderTransformOrigin = new Point(0.5, 0.5);
 
-        if (!navigatedElement.RenderTransformOrigin.Equals(new Point(0.5, 0.5)))
-            navigatedElement!.RenderTransformOrigin = new Point(0.5, 0.5);
+            if (fade)
+                element.Opacity = 0;
 
-        navigatedElement.RenderTransform.BeginAnimation(TranslateTransform.YProperty, translateDoubleAnimation);
-    }
+            var animator = new FrameAnimator(
+                durationMs,
+                t =>
+                {
+                    var eased = Easings.Smooth(t);
 
-    private static void SlideRightTransition(FrameworkElement navigatedElement, Duration duration)
-    {
-        var translateDoubleAnimation = new DoubleAnimation
-        {
-            Duration = duration,
-            DecelerationRatio = DecelerationRatio,
-            From = 50,
-            To = 0,
-        };
+                    transform.X = Lerp(offsetX, 0, eased);
+                    transform.Y = Lerp(offsetY, 0, eased);
 
-        if (navigatedElement.RenderTransform is not TranslateTransform)
-            navigatedElement!.RenderTransform = new TranslateTransform(0, 0);
+                    if (fade)
+                        element.Opacity = Easings.Fade(t);
+                },
+                () =>
+                {
+                    transform.X = 0;
+                    transform.Y = 0;
+                    element.Opacity = 1;
+                    element.CacheMode = null;
+                });
 
-        if (!navigatedElement.RenderTransformOrigin.Equals(new Point(0.5, 0.5)))
-            navigatedElement!.RenderTransformOrigin = new Point(0.5, 0.5);
+            animator.Start();
+        }
 
-        navigatedElement.RenderTransform.BeginAnimation(TranslateTransform.XProperty, translateDoubleAnimation);
-    }
-
-    private static void SlideLeftTransition(FrameworkElement navigatedElement, Duration duration)
-    {
-        var translateDoubleAnimation = new DoubleAnimation
-        {
-            Duration = duration,
-            DecelerationRatio = DecelerationRatio,
-            From = -50,
-            To = 0,
-        };
-
-        if (navigatedElement.RenderTransform is not TranslateTransform)
-            navigatedElement!.RenderTransform = new TranslateTransform(0, 0);
-
-        if (!navigatedElement.RenderTransformOrigin.Equals(new Point(0.5, 0.5)))
-            navigatedElement!.RenderTransformOrigin = new Point(0.5, 0.5);
-
-        navigatedElement.RenderTransform.BeginAnimation(TranslateTransform.XProperty, translateDoubleAnimation);
+        private static double Lerp(double from, double to, double t)
+            => from + (to - from) * t;
     }
 }

@@ -18,7 +18,7 @@ public static class Accent
     /// <summary>
     /// The maximum value of the background HSV brightness after which the text on the accent will be turned dark.
     /// </summary>
-    private const double BackgroundBrightnessThresholdValue = 80d;
+    private const double BackgroundBrightnessThresholdValue = 90d;
 
     /// <summary>
     /// SystemAccentColor.

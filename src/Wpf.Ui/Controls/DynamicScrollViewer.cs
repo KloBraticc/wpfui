@@ -1,205 +1,142 @@
-﻿// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
-// Copyright (C) Leszek Pomianowski and WPF UI Contributors.
-// All Rights Reserved.
-
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Wpf.Ui.Common;
 
-namespace Wpf.Ui.Controls;
-
-/// <summary>
-/// Custom <see cref="System.Windows.Controls.ScrollViewer"/> with events depending on actions taken by the user.
-/// </summary>
-[ToolboxItem(true)]
-[ToolboxBitmap(typeof(DynamicScrollViewer), "DynamicScrollViewer.bmp")]
-[DefaultEvent("ScrollChangedEvent")]
-public class DynamicScrollViewer : System.Windows.Controls.ScrollViewer
+namespace Wpf.Ui.Controls
 {
-    private readonly EventIdentifier _verticalIdentifier = new();
-
-    private readonly EventIdentifier _horizontalIdentifier = new();
-
-    // Due to the large number of triggered events, we limit the complex logic of DependencyProperty
-    private bool _scrollingVertically = false;
-
-    private bool _scrollingHorizontally = false;
-
-    private int _timeout = 1200;
-
-    private double _minimalChange = 40d;
-
-    /// <summary>
-    /// Property for <see cref="IsScrollingVertically"/>.
-    /// </summary>
-    public static readonly DependencyProperty IsScrollingVerticallyProperty = DependencyProperty.Register(
-        nameof(IsScrollingVertically),
-        typeof(bool), typeof(DynamicScrollViewer),
-        new PropertyMetadata(false, IsScrollingVerticallyProperty_OnChanged));
-
-    /// <summary>
-    /// Property for <see cref="IsScrollingHorizontally"/>.
-    /// </summary>
-    public static readonly DependencyProperty IsScrollingHorizontallyProperty = DependencyProperty.Register(
-        nameof(IsScrollingHorizontally),
-        typeof(bool), typeof(DynamicScrollViewer), new PropertyMetadata(false, IsScrollingHorizontally_OnChanged));
-
-    /// <summary>
-    /// Property for <see cref="MinimalChange"/>.
-    /// </summary>
-    public static readonly DependencyProperty MinimalChangeProperty = DependencyProperty.Register(
-        nameof(MinimalChange),
-        typeof(double), typeof(DynamicScrollViewer), new PropertyMetadata(40d, MinimalChangeProperty_OnChanged));
-
-    /// <summary>
-    /// Property for <see cref="Timeout"/>.
-    /// </summary>
-    public static readonly DependencyProperty TimeoutProperty = DependencyProperty.Register(nameof(Timeout),
-        typeof(int), typeof(DynamicScrollViewer), new PropertyMetadata(1200, TimeoutProperty_OnChanged));
-
-    /// <summary>
-    /// Gets or sets information whether the user was scrolling vertically for the last few seconds.
-    /// </summary>
-    public bool IsScrollingVertically
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(DynamicScrollViewer), "DynamicScrollViewer.bmp")]
+    public class DynamicScrollViewer : ScrollViewer
     {
-        get => (bool)GetValue(IsScrollingVerticallyProperty);
-        set => SetValue(IsScrollingVerticallyProperty, value);
-    }
+        private CancellationTokenSource? _verticalCts;
+        private CancellationTokenSource? _horizontalCts;
 
-    /// <summary>
-    /// Gets or sets information whether the user was scrolling horizontally for the last few seconds.
-    /// </summary>
-    public bool IsScrollingHorizontally
-    {
-        get => (bool)GetValue(IsScrollingHorizontallyProperty);
-        set => SetValue(IsScrollingHorizontallyProperty, value);
-    }
+        private int _timeout = 900;
+        private double _minimalChange = 8d;
 
-    /// <summary>
-    /// Gets or sets the value required for the scroll to show automatically.
-    /// </summary>
-    public double MinimalChange
-    {
-        get => (double)GetValue(MinimalChangeProperty);
-        set => SetValue(MinimalChangeProperty, value);
-    }
+        public static readonly DependencyProperty IsScrollingVerticallyProperty =
+            DependencyProperty.Register(
+                nameof(IsScrollingVertically),
+                typeof(bool),
+                typeof(DynamicScrollViewer),
+                new PropertyMetadata(false));
 
-    /// <summary>
-    /// Gets or sets time after which the scroll is to be hidden.
-    /// </summary>
-    public int Timeout
-    {
-        get => (int)GetValue(TimeoutProperty);
-        set => SetValue(TimeoutProperty, value);
-    }
+        public static readonly DependencyProperty IsScrollingHorizontallyProperty =
+            DependencyProperty.Register(
+                nameof(IsScrollingHorizontally),
+                typeof(bool),
+                typeof(DynamicScrollViewer),
+                new PropertyMetadata(false));
 
-    //protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
-    //{
-    //    base.OnPreviewMouseWheel(e);
-    //}
+        public static readonly DependencyProperty MinimalChangeProperty =
+            DependencyProperty.Register(
+                nameof(MinimalChange),
+                typeof(double),
+                typeof(DynamicScrollViewer),
+                new PropertyMetadata(8d, OnMinimalChangeChanged));
 
-    //protected override void OnKeyDown(KeyEventArgs e)
-    //{
-    //    base.OnKeyDown(e);
-    //}
+        public static readonly DependencyProperty TimeoutProperty =
+            DependencyProperty.Register(
+                nameof(Timeout),
+                typeof(int),
+                typeof(DynamicScrollViewer),
+                new PropertyMetadata(900, OnTimeoutChanged));
 
-    /// <summary>
-    /// OnScrollChanged is an override called whenever scrolling state changes on this <see cref="DynamicScrollViewer"/>.
-    /// </summary>
-    /// <remarks>
-    /// OnScrollChanged fires the ScrollChangedEvent. Overriders of this method should call
-    /// base.OnScrollChanged(args) if they want the event to be fired.
-    /// </remarks>
-    /// <param name="e">ScrollChangedEventArgs containing information about the change in scrolling state.</param>
-    protected override void OnScrollChanged(ScrollChangedEventArgs e)
-    {
-        base.OnScrollChanged(e);
+        public bool IsScrollingVertically
+        {
+            get => (bool)GetValue(IsScrollingVerticallyProperty);
+            private set => SetValue(IsScrollingVerticallyProperty, value);
+        }
 
-        //#if DEBUG
-        //            System.Diagnostics.Debug.WriteLine($"DEBUG | {typeof(DynamicScrollBar)}.{nameof(e.VerticalChange)} - {e.VerticalChange}", "WPFUI");
-        //            System.Diagnostics.Debug.WriteLine($"DEBUG | {typeof(DynamicScrollBar)}.{nameof(e.HorizontalChange)} - {e.HorizontalChange}", "WPFUI");
-        //#endif
+        public bool IsScrollingHorizontally
+        {
+            get => (bool)GetValue(IsScrollingHorizontallyProperty);
+            private set => SetValue(IsScrollingHorizontallyProperty, value);
+        }
 
-        if (e.HorizontalChange > _minimalChange || e.HorizontalChange < -_minimalChange)
-            UpdateHorizontalScrollingState();
+        public double MinimalChange
+        {
+            get => _minimalChange;
+            set => SetValue(MinimalChangeProperty, value);
+        }
 
-        if (e.VerticalChange > _minimalChange || e.VerticalChange < -_minimalChange)
-            UpdateVerticalScrollingState();
-    }
+        public int Timeout
+        {
+            get => _timeout;
+            set => SetValue(TimeoutProperty, value);
+        }
 
-    private async void UpdateVerticalScrollingState()
-    {
-        // TODO: Optimize
-        // My main assumption here is that each scroll causes a new "event / thread" to be assigned.
-        // If more than Timeout has passed since the last event, there is no interaction.
-        // We pass this value to the ScrollBar and link it to IsMouseOver.
-        // This way we have a dynamic scrollbar that responds to scroll / mouse over.
+        protected override void OnScrollChanged(ScrollChangedEventArgs e)
+        {
+            base.OnScrollChanged(e);
 
-        var currentEvent = _verticalIdentifier.GetNext();
+            if (Math.Abs(e.VerticalChange) >= _minimalChange)
+                TriggerScrollState(isVertical: true);
 
-        if (!_scrollingVertically)
-            IsScrollingVertically = true;
+            if (Math.Abs(e.HorizontalChange) >= _minimalChange)
+                TriggerScrollState(isVertical: false);
+        }
 
-        if (_timeout > -1)
-            await Task.Delay(_timeout < 10000 ? _timeout : 1000);
+        private void TriggerScrollState(bool isVertical)
+        {
+            if (isVertical)
+            {
+                _verticalCts?.Cancel();
+                _verticalCts = new CancellationTokenSource();
 
-        if (_verticalIdentifier.IsEqual(currentEvent) && _scrollingVertically)
-            IsScrollingVertically = false;
-    }
+                if (!IsScrollingVertically)
+                    IsScrollingVertically = true;
 
-    private async void UpdateHorizontalScrollingState()
-    {
-        // TODO: Optimize
-        // My main assumption here is that each scroll causes a new "event / thread" to be assigned.
-        // If more than Timeout has passed since the last event, there is no interaction.
-        // We pass this value to the ScrollBar and link it to IsMouseOver.
-        // This way we have a dynamic scrollbar that responds to scroll / mouse over.
+                _ = ResetScrollStateAsync(_verticalCts.Token, isVertical);
+            }
+            else
+            {
+                _horizontalCts?.Cancel();
+                _horizontalCts = new CancellationTokenSource();
 
-        var currentEvent = _horizontalIdentifier.GetNext();
+                if (!IsScrollingHorizontally)
+                    IsScrollingHorizontally = true;
 
-        if (!_scrollingHorizontally)
-            IsScrollingHorizontally = true;
+                _ = ResetScrollStateAsync(_horizontalCts.Token, isVertical);
+            }
+        }
 
-        await Task.Delay(Timeout < 10000 ? Timeout : 1000);
+        private async Task ResetScrollStateAsync(CancellationToken token, bool isVertical)
+        {
+            try
+            {
+                // Grace period: feels smoother than hard cutoff
+                await Task.Delay(_timeout, token);
+                await Task.Delay(120, token);
 
-        if (_horizontalIdentifier.IsEqual(currentEvent) && _scrollingHorizontally)
-            IsScrollingHorizontally = false;
-    }
+                if (token.IsCancellationRequested)
+                    return;
 
-    private static void IsScrollingVerticallyProperty_OnChanged(DependencyObject d,
-        DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not DynamicScrollViewer scroll)
-            return;
+                if (isVertical)
+                    IsScrollingVertically = false;
+                else
+                    IsScrollingHorizontally = false;
+            }
+            catch (TaskCanceledException)
+            {
+                // Expected during continuous scrolling
+            }
+        }
 
-        scroll._scrollingVertically = scroll.IsScrollingVertically;
-    }
+        private static void OnMinimalChangeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DynamicScrollViewer scroll)
+                scroll._minimalChange = Math.Max(1d, (double)e.NewValue);
+        }
 
-    private static void IsScrollingHorizontally_OnChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not DynamicScrollViewer scroll)
-            return;
-
-        scroll._scrollingHorizontally = scroll.IsScrollingHorizontally;
-    }
-
-    private static void MinimalChangeProperty_OnChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not DynamicScrollViewer scroll)
-            return;
-
-        scroll._minimalChange = scroll.MinimalChange;
-    }
-
-    private static void TimeoutProperty_OnChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not DynamicScrollViewer scroll)
-            return;
-
-        scroll._timeout = scroll.Timeout;
+        private static void OnTimeoutChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DynamicScrollViewer scroll)
+                scroll._timeout = Math.Max(100, (int)e.NewValue);
+        }
     }
 }
