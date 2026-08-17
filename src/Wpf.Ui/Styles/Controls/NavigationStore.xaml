@@ -189,19 +189,19 @@
                                             Storyboard.TargetProperty="Height"
                                             From="15"
                                             To="0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                         <DoubleAnimation
                                             Storyboard.TargetName="ContentGrid"
                                             Storyboard.TargetProperty="Opacity"
                                             From="1"
                                             To="0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                         <DoubleAnimation
                                             Storyboard.TargetName="MainBorder"
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Opacity)"
                                             From="0"
                                             To="1"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -213,19 +213,19 @@
                                             Storyboard.TargetProperty="Height"
                                             From="0"
                                             To="15"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                         <DoubleAnimation
                                             Storyboard.TargetName="ContentGrid"
                                             Storyboard.TargetProperty="Opacity"
                                             From="0"
                                             To="1"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                         <DoubleAnimation
                                             Storyboard.TargetName="MainBorder"
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Opacity)"
                                             From="1"
                                             To="0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>

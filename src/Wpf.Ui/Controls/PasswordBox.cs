@@ -9,8 +9,6 @@ using System.Windows.Controls;
 
 namespace Wpf.Ui.Controls;
 
-// TODO: This is an initial implementation and requires the necessary corrections, tests and adjustments.
-
 /**
  * TextProperty contains asterisks OR raw password if IsPasswordRevealed is set to true
  * PasswordProperty always contains raw password
@@ -113,7 +111,7 @@ public class PasswordBox : Wpf.Ui.Controls.TextBox
     /// <inheritdoc />
     protected override void OnTextChanged(TextChangedEventArgs e)
     {
-        UpdateTextContents(true);
+        UpdateTextContents(true, e);
 
         if (_lockUpdatingContents)
         {
@@ -136,7 +134,7 @@ public class PasswordBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     protected virtual void OnPasswordChanged()
     {
-        UpdateTextContents(false);
+        UpdateTextContents(false, null);
     }
 
     /// <summary>
@@ -150,19 +148,27 @@ public class PasswordBox : Wpf.Ui.Controls.TextBox
             return;
 
         _lockUpdatingContents = true;
-
-        Text = new String(PasswordChar, Password.Length);
-
-        _lockUpdatingContents = false;
+        try
+        {
+            Text = new String(PasswordChar, Password.Length);
+        }
+        finally
+        {
+            _lockUpdatingContents = false;
+        }
     }
 
     protected virtual void OnPasswordRevealModeChanged()
     {
         _lockUpdatingContents = true;
-
-        Text = IsPasswordRevealed ? Password : new String(PasswordChar, Password.Length);
-
-        _lockUpdatingContents = false;
+        try
+        {
+            Text = IsPasswordRevealed ? Password : new String(PasswordChar, Password.Length);
+        }
+        finally
+        {
+            _lockUpdatingContents = false;
+        }
     }
 
     /// <summary>
@@ -192,7 +198,7 @@ public class PasswordBox : Wpf.Ui.Controls.TextBox
         }
     }
 
-    private void UpdateTextContents(bool isTriggeredByTextInput)
+    private void UpdateTextContents(bool isTriggeredByTextInput, TextChangedEventArgs? args)
     {
         if (_lockUpdatingContents)
             return;
@@ -203,71 +209,61 @@ public class PasswordBox : Wpf.Ui.Controls.TextBox
                 return;
 
             _lockUpdatingContents = true;
-
-            if (isTriggeredByTextInput)
+            try
             {
-                Password = Text;
+                if (isTriggeredByTextInput)
+                {
+                    Password = Text;
+                }
+                else
+                {
+                    Text = Password;
+                    CaretIndex = Text.Length;
+                }
+
+                RaiseEvent(new RoutedEventArgs(PasswordChangedEvent));
             }
-            else
+            finally
             {
-                Text = Password;
-                CaretIndex = Text.Length;
+                _lockUpdatingContents = false;
             }
-
-            RaiseEvent(new RoutedEventArgs(PasswordChangedEvent));
-
-            _lockUpdatingContents = false;
-
             return;
         }
 
         var caretIndex = CaretIndex;
-        var selectionIndex = SelectionStart;
-        var currentPassword = Password;
-        var newPasswordValue = currentPassword;
+        var newPasswordValue = Password;
 
-        if (isTriggeredByTextInput)
+        if (isTriggeredByTextInput && args != null)
         {
-            var currentText = Text;
-            var newCharacters = currentText.Replace(PasswordChar.ToString(), String.Empty);
-
-            if (currentText.Length < currentPassword.Length)
-                newPasswordValue = currentPassword.Remove(selectionIndex, currentPassword.Length - currentText.Length);
-
-            if (newCharacters.Length > 1)
+            foreach (TextChange change in args.Changes)
             {
-                var index = currentText.IndexOf(newCharacters[0]);
-
-                newPasswordValue = index > newPasswordValue.Length - 1
-                    ? newPasswordValue + newCharacters
-                    : newPasswordValue.Insert(index, newCharacters);
-            }
-            else
-            {
-                for (int i = 0; i < currentText.Length; i++)
+                int offset = Math.Clamp(change.Offset, 0, newPasswordValue.Length);
+                int removed = Math.Min(change.RemovedLength, newPasswordValue.Length - offset);
+                if (removed > 0)
+                    newPasswordValue = newPasswordValue.Remove(offset, removed);
+                int available = Math.Max(0, Text.Length - change.Offset);
+                int added = Math.Min(change.AddedLength, available);
+                if (added > 0)
                 {
-                    if (currentText[i] == PasswordChar)
-                        continue;
-
-                    newPasswordValue = currentText.Length == newPasswordValue.Length
-                        ? newPasswordValue
-                            .Remove(i, 1)
-                            .Insert(i, currentText[i].ToString())
-                        : newPasswordValue
-                            .Insert(i, currentText[i].ToString());
+                    string inserted = Text.Substring(change.Offset, added).Replace(PasswordChar.ToString(), String.Empty);
+                    if (inserted.Length > 0)
+                        newPasswordValue = newPasswordValue.Insert(Math.Min(offset, newPasswordValue.Length), inserted);
                 }
             }
         }
 
         _lockUpdatingContents = true;
-
-        Text = new String(PasswordChar, newPasswordValue.Length);
-        Password = newPasswordValue;
-        CaretIndex = caretIndex;
-
-        RaiseEvent(new RoutedEventArgs(PasswordChangedEvent));
-
-        _lockUpdatingContents = false;
+        try
+        {
+            Text = new String(PasswordChar, newPasswordValue.Length);
+            Password = newPasswordValue;
+            CaretIndex = Math.Min(caretIndex, Text.Length);
+            RaiseEvent(new RoutedEventArgs(PasswordChangedEvent));
+        }
+        finally
+        {
+            _lockUpdatingContents = false;
+        }
     }
 
     /// <summary>

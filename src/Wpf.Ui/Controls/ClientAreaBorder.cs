@@ -32,6 +32,19 @@ public class ClientAreaBorder : System.Windows.Controls.Border, IThemeControl
 
     private Window? _oldWindow;
 
+    private Color _lastAccentColor;
+    private static readonly SolidColorBrush InactiveBorderLight = CreateFrozen(Color.FromArgb(255, 200, 200, 200));
+    private static readonly SolidColorBrush InactiveBorderDark = CreateFrozen(Color.FromArgb(255, 58, 58, 58));
+
+    private static SolidColorBrush CreateFrozen(Color color)
+    {
+        SolidColorBrush brush = new SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
+    }
+
+    private bool _isActive;
+
     private static Thickness? _paddedBorderThickness;
 
     private static Thickness? _resizeFrameBorderThickness;
@@ -50,8 +63,9 @@ public class ClientAreaBorder : System.Windows.Controls.Border, IThemeControl
             if (_paddedBorderThickness is not null)
                 return _paddedBorderThickness.Value;
 
-            var paddedBorder = Interop.User32.GetSystemMetrics(
-                Interop.User32.SM.CXPADDEDBORDER);
+            var paddedBorder = System.OperatingSystem.IsWindows()
+                ? Interop.User32.GetSystemMetrics(Interop.User32.SM.CXPADDEDBORDER)
+                : 0;
 
             var (factorX, factorY) = GetDpi();
             var frameSize = new Size(paddedBorder, paddedBorder);
@@ -87,17 +101,39 @@ public class ClientAreaBorder : System.Windows.Controls.Border, IThemeControl
     public ClientAreaBorder()
     {
         Theme = Appearance.Theme.GetAppTheme();
+
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        Theme = Appearance.Theme.GetAppTheme();
+        _lastAccentColor = Accent.SystemAccent;
+        Appearance.Theme.Changed -= OnThemeChanged;
         Appearance.Theme.Changed += OnThemeChanged;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        Appearance.Theme.Changed -= OnThemeChanged;
+
+        if (_oldWindow is { } window)
+        {
+            window.Activated -= OnWindowActivated;
+            window.Deactivated -= OnWindowDeactivated;
+            window.StateChanged -= OnWindowStateChanged;
+        }
     }
 
     private void OnThemeChanged(ThemeType currentTheme, Color systemAccent)
     {
         Theme = currentTheme;
+        _lastAccentColor = systemAccent;
 
         ApplyDefaultWindowBorder();
     }
 
-    /// <inheritdoc />
     protected override void OnVisualParentChanged(DependencyObject oldParent)
     {
         base.OnVisualParentChanged(oldParent);
@@ -105,14 +141,23 @@ public class ClientAreaBorder : System.Windows.Controls.Border, IThemeControl
         if (_oldWindow is { } oldWindow)
         {
             oldWindow.StateChanged -= OnWindowStateChanged;
+            oldWindow.Activated -= OnWindowActivated;
+            oldWindow.Deactivated -= OnWindowDeactivated;
         }
 
         var newWindow = (Window?)Window.GetWindow(this);
 
         if (newWindow is not null)
         {
-            newWindow.StateChanged -= OnWindowStateChanged; // Unsafe
+            newWindow.StateChanged -= OnWindowStateChanged;
             newWindow.StateChanged += OnWindowStateChanged;
+            newWindow.Activated -= OnWindowActivated;
+            newWindow.Activated += OnWindowActivated;
+            newWindow.Deactivated -= OnWindowDeactivated;
+            newWindow.Deactivated += OnWindowDeactivated;
+
+            _lastAccentColor = Accent.SystemAccent;
+            _isActive = newWindow.IsActive;
         }
 
         _oldWindow = newWindow;
@@ -132,34 +177,49 @@ public class ClientAreaBorder : System.Windows.Controls.Border, IThemeControl
         };
     }
 
+    private void OnWindowActivated(object? sender, EventArgs e)
+    {
+        _isActive = true;
+        ApplyDefaultWindowBorder();
+    }
+
+    private void OnWindowDeactivated(object? sender, EventArgs e)
+    {
+        _isActive = false;
+        ApplyDefaultWindowBorder();
+    }
+
     private void ApplyDefaultWindowBorder()
     {
-        if (Win32.Utilities.IsOSWindows11OrNewer || _oldWindow == null)
+        if (_oldWindow is not UiWindow uiWindow)
         {
             ResetDefaultWindowBorder(_oldWindow);
             return;
         }
 
-        ThemeType theme = Theme;
-
-        if (_oldWindow is UiWindow uiWindow)
+        if (!uiWindow.DefaultBorderEnabled)
         {
-            if (!uiWindow.DefaultBorderEnabled)
-            {
-                ResetDefaultWindowBorder(uiWindow);
-                return;
-            }
-
-            if (uiWindow.DefaultBorderThemeOverwrite != ThemeType.Unknown)
-                theme = uiWindow.DefaultBorderThemeOverwrite;
+            ResetDefaultWindowBorder(uiWindow);
+            return;
         }
 
-        // SystemParameters.WindowGlassBrush
+        ThemeType theme = Theme;
 
-        Brush brush = new SolidColorBrush(theme == ThemeType.Light ? Color.FromArgb(255, 200, 200, 200) : Color.FromArgb(255, 58, 58, 58));
+        if (uiWindow.DefaultBorderThemeOverwrite != ThemeType.Unknown)
+            theme = uiWindow.DefaultBorderThemeOverwrite;
+
+        if (_isActive)
+        {
+            SolidColorBrush accentBrush = new SolidColorBrush(_lastAccentColor);
+            accentBrush.Freeze();
+            BorderBrush = accentBrush;
+        }
+        else
+        {
+            BorderBrush = theme == ThemeType.Light ? InactiveBorderLight : InactiveBorderDark;
+        }
 
         BorderThickness = new Thickness(1);
-        BorderBrush = brush;
     }
 
     private void ResetDefaultWindowBorder(Window? window)

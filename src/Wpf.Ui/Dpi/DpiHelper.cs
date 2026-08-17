@@ -59,18 +59,6 @@ internal static class DpiHelper
         return new Dpi(windowDpi, windowDpi);
     }
 
-    // TODO: Look into utilizing preprocessor symbols for more functionality
-    // ----
-    // There is an opportunity to check against NET46 if we can use
-    // VisualTreeHelper in this class. We are currently not utilizing
-    // it because it is not available in .NET Framework 4.6 (available
-    // starting 4.6.2). For now, there is no need to overcomplicate this
-    // solution for some infrequent DPI calculations. However, if this
-    // becomes more central to various implementations, we may want to
-    // look into fleshing it out a bit further.
-    // ----
-    // Reference: https://docs.microsoft.com/en-us/dotnet/standard/frameworks
-
     /// <summary>
     /// Gets the DPI values from <see cref="SystemParameters"/>.
     /// </summary>
@@ -159,4 +147,3 @@ internal static class DpiHelper
         return new Thickness(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
     }
 }
-

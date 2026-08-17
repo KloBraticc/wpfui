@@ -1,4 +1,4 @@
-﻿<!--
+<!--
     This Source Code Form is subject to the terms of the MIT License.
     If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
     Copyright (C) Leszek Pomianowski and WPF UI Contributors.
@@ -22,35 +22,73 @@
                 <SolidColorBrush Color="{DynamicResource TextFillColorPrimary}" />
             </Setter.Value>
         </Setter>
-        <Setter Property="Background" Value="{DynamicResource SystemFillColorSolidNeutralBackgroundBrush}" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <SolidColorBrush Color="{DynamicResource ComboBoxPopupAcrylicBackground}" />
+            </Setter.Value>
+        </Setter>
         <Setter Property="BorderBrush" Value="{DynamicResource MenuBorderColorDefaultBrush}" />
         <Setter Property="MinWidth" Value="140" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="HasDropShadow" Value="False" />
         <Setter Property="Grid.IsSharedSizeScope" Value="True" />
-        <Setter Property="Popup.PopupAnimation" Value="Slide" />
+        <Setter Property="Popup.PopupAnimation" Value="Fade" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ContextMenu}">
-                    <Border
-                        x:Name="Border"
-                        Padding="0,3,0,3"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8">
-                        <StackPanel
-                            ClipToBounds="True"
-                            IsItemsHost="True"
-                            KeyboardNavigation.DirectionalNavigation="Cycle"
-                            Orientation="Vertical" />
-                    </Border>
+                    <Grid x:Name="Border" RenderTransformOrigin="0.5,0">
+                        <Grid.RenderTransform>
+                            <ScaleTransform ScaleY="1" />
+                        </Grid.RenderTransform>
+                        <Border
+                            x:Name="SurfaceLayer"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource PopupCornerRadius}">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="14" ShadowDepth="3" Opacity="0.32" Color="#000000" Direction="270" />
+                            </Border.Effect>
+                        </Border>
+                        <Border Padding="0,3,0,3" ClipToBounds="True" CornerRadius="{DynamicResource PopupCornerRadius}">
+                            <StackPanel
+                                ClipToBounds="True"
+                                IsItemsHost="True"
+                                KeyboardNavigation.DirectionalNavigation="Cycle"
+                                Orientation="Vertical" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsOpen" Value="True">
-                            <!--  Animate  -->
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Border"
+                                            Storyboard.TargetProperty="Opacity"
+                                            From="0"
+                                            To="1"
+                                            Duration="00:00:00.07">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuarticEase EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="Border"
+                                            Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                            From="0.35"
+                                            To="1"
+                                            Duration="00:00:00.26">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuinticEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

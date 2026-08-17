@@ -9,7 +9,6 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Wpf.Ui.Controls.Interfaces;
-using Wpf.Ui.Dpi;
 using Wpf.Ui.TitleBar;
 
 namespace Wpf.Ui.Controls;
@@ -32,7 +31,21 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
 
     internal Interop.WinDef.POINT _doubleClickPoint;
 
+    private static readonly SolidColorBrush SnapHoverLight = CreateFrozenBrush(Color.FromArgb(0x1A, 0x00, 0x00, 0x00));
+
+    private static readonly SolidColorBrush SnapHoverDark = CreateFrozenBrush(Color.FromArgb(0x17, 0xFF, 0xFF, 0xFF));
+
+    private static SolidColorBrush CreateFrozenBrush(Color color)
+    {
+        SolidColorBrush brush = new SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
+    }
+
     internal SnapLayout _snapLayout;
+    private System.Windows.Controls.Grid _mainGrid;
+    private Wpf.Ui.Controls.Button _maximizeButton;
+    private Wpf.Ui.Controls.Button _restoreButton;
 
     /// <summary>
     /// Property for <see cref="Theme"/>.
@@ -383,6 +396,7 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
         SetValue(TemplateButtonCommandProperty, new Common.RelayCommand(o => OnTemplateButtonClick(this, o)));
 
         Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
     }
 
     /// <inheritdoc />
@@ -391,13 +405,33 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
         base.OnInitialized(e);
 
         Theme = Appearance.Theme.GetAppTheme();
-        Appearance.Theme.Changed += OnThemeChanged;
     }
 
     protected virtual void OnLoaded(object sender, RoutedEventArgs e)
     {
+        Theme = Appearance.Theme.GetAppTheme();
+        Appearance.Theme.Changed -= OnThemeChanged;
+        Appearance.Theme.Changed += OnThemeChanged;
+
         if (ParentWindow != null)
+        {
+            ParentWindow.StateChanged -= OnParentWindowStateChanged;
             ParentWindow.StateChanged += OnParentWindowStateChanged;
+        }
+
+        if (_snapLayout == null && ShowMaximize && UseSnapLayout && _maximizeButton != null && _restoreButton != null)
+            InitializeSnapLayout(_maximizeButton, _restoreButton);
+    }
+
+    protected virtual void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        Appearance.Theme.Changed -= OnThemeChanged;
+
+        if (ParentWindow != null)
+            ParentWindow.StateChanged -= OnParentWindowStateChanged;
+
+        _snapLayout?.Dispose();
+        _snapLayout = null;
     }
 
     /// <summary>
@@ -411,13 +445,32 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
         var mainGrid = GetTemplateChild(ElementMainGrid) as System.Windows.Controls.Grid;
         var maximizeButton = GetTemplateChild(ElementMaximizeButton) as Wpf.Ui.Controls.Button;
         var restoreButton = GetTemplateChild(ElementRestoreButton) as Wpf.Ui.Controls.Button;
+        _maximizeButton = maximizeButton;
+        _restoreButton = restoreButton;
 
-        if (mainGrid != null)
+        if (_mainGrid != null)
         {
-            mainGrid.MouseLeftButtonDown += OnMainGridMouseLeftButtonDown;
-            mainGrid.MouseMove += OnMainGridMouseMove;
+            _mainGrid.MouseLeftButtonDown -= OnMainGridMouseLeftButtonDown;
+            _mainGrid.MouseMove -= OnMainGridMouseMove;
+            _mainGrid.MouseLeftButtonUp -= OnMainGridMouseLeftButtonUp;
+            _mainGrid.LostMouseCapture -= OnMainGridLostMouseCapture;
         }
 
+        _mainGrid = mainGrid;
+        if (_mainGrid != null)
+        {
+            _mainGrid.MouseLeftButtonDown += OnMainGridMouseLeftButtonDown;
+            _mainGrid.MouseMove += OnMainGridMouseMove;
+
+            if (!System.OperatingSystem.IsWindows())
+            {
+                _mainGrid.MouseLeftButtonUp += OnMainGridMouseLeftButtonUp;
+                _mainGrid.LostMouseCapture += OnMainGridLostMouseCapture;
+            }
+        }
+
+        _snapLayout?.Dispose();
+        _snapLayout = null;
         if (ShowMaximize && UseSnapLayout && maximizeButton != null && restoreButton != null)
             InitializeSnapLayout(maximizeButton, restoreButton);
     }
@@ -535,20 +588,9 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
 
         _snapLayout = SnapLayout.Register(ParentWindow, maximizeButton, restoreButton);
 
-        // Can be taken it from the Template, but honestly - a classic - TODO: 
-        // ButtonsBackground, but
-        _snapLayout.HoverColorLight = new SolidColorBrush(Color.FromArgb(
-            (byte)0x1A,
-            (byte)0x00,
-            (byte)0x00,
-            (byte)0x00)
-        );
-        _snapLayout.HoverColorDark = new SolidColorBrush(Color.FromArgb(
-            (byte)0x17,
-            (byte)0xFF,
-            (byte)0xFF,
-            (byte)0xFF)
-        );
+        _snapLayout.DefaultButtonBackground = ButtonsBackground as SolidColorBrush ?? Brushes.Transparent;
+        _snapLayout.HoverColorLight = SnapHoverLight;
+        _snapLayout.HoverColorDark = SnapHoverDark;
 
         _snapLayout.Theme = Theme;
     }
@@ -559,39 +601,55 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
             return;
 
         // prevent firing from double clicking when the mouse never actually moved
-        Interop.User32.GetCursorPos(out var currentMousePos);
+        if (System.OperatingSystem.IsWindows())
+        {
+            Interop.User32.GetCursorPos(out var currentMousePos);
 
-        if (currentMousePos.x == _doubleClickPoint.x && currentMousePos.y == _doubleClickPoint.y)
-            return;
+            if (currentMousePos.x == _doubleClickPoint.x && currentMousePos.y == _doubleClickPoint.y)
+                return;
+        }
 
         if (IsMaximized)
         {
+            double horizontalRatio = ParentWindow.ActualWidth > 0
+                ? Math.Clamp(e.GetPosition(ParentWindow).X / ParentWindow.ActualWidth, 0.0, 1.0)
+                : 0.5;
             var screenPoint = PointToScreen(e.MouseDevice.GetPosition(this));
-            var systemDpi = DpiHelper.GetSystemDpi();
+            var source = PresentationSource.FromVisual(ParentWindow);
+            if (source?.CompositionTarget != null)
+                screenPoint = source.CompositionTarget.TransformFromDevice.Transform(screenPoint);
 
-            screenPoint.X /= systemDpi.DpiScaleX;
-            screenPoint.Y /= systemDpi.DpiScaleY;
-
-            // TODO: refine the Left value to be more accurate
-            // - This calculation is good enough using the center
-            //   of the titlebar, however this isn't quite accurate for
-            //   how the OS operates.
-            // - It should be set as a % (e.g. screen X / maximized width),
-            //   then offset from the left to line up more naturally.
-            ParentWindow.Left = screenPoint.X - (ParentWindow.RestoreBounds.Width * 0.5);
+            ParentWindow.Left = screenPoint.X - (ParentWindow.RestoreBounds.Width * horizontalRatio);
             ParentWindow.Top = screenPoint.Y;
 
-            // style has to be quickly swapped to avoid restore animation delay
-            var style = ParentWindow.WindowStyle;
-            ParentWindow.WindowStyle = WindowStyle.None;
-            ParentWindow.WindowState = WindowState.Normal;
-            ParentWindow.WindowStyle = style;
+            if (System.OperatingSystem.IsWindows())
+            {
+                var style = ParentWindow.WindowStyle;
+                ParentWindow.WindowStyle = WindowStyle.None;
+                ParentWindow.WindowState = WindowState.Normal;
+                ParentWindow.WindowStyle = style;
+            }
+            else
+            {
+                ParentWindow.WindowState = WindowState.Normal;
+            }
         }
 
-        // Call drag move only when mouse down, check again
-        // if()
-        if (e.LeftButton == MouseButtonState.Pressed)
+        if (!System.OperatingSystem.IsWindows())
+        {
+            if (_portableDragStarted)
+                return;
+            _portableDragStarted = true;
+        }
+
+        try
+        {
             ParentWindow.DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+            _portableDragStarted = false;
+        }
     }
 
     private void OnParentWindowStateChanged(object sender, EventArgs e)
@@ -603,14 +661,30 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
             IsMaximized = ParentWindow.WindowState == WindowState.Maximized;
     }
 
+    private bool _portableDragStarted;
+
     private void OnMainGridMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (!System.OperatingSystem.IsWindows())
+            _portableDragStarted = false;
+
         if (e.ClickCount != 2)
             return;
 
-        Interop.User32.GetCursorPos(out _doubleClickPoint);
+        if (System.OperatingSystem.IsWindows())
+            Interop.User32.GetCursorPos(out _doubleClickPoint);
 
         MaximizeWindow();
+    }
+
+    private void OnMainGridMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        _portableDragStarted = false;
+    }
+
+    private void OnMainGridLostMouseCapture(object sender, MouseEventArgs e)
+    {
+        _portableDragStarted = false;
     }
 
     private void OnTemplateButtonClick(TitleBar sender, object parameter)

@@ -46,7 +46,7 @@
                                             Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="1.0"
-                                            Duration="0:0:0.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -58,7 +58,7 @@
                                             Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Opacity)"
                                             From="1.0"
                                             To="0.0"
-                                            Duration="0:0:0.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -242,7 +242,7 @@
                                         Padding="0,3,0,3"
                                         BorderBrush="{DynamicResource MenuBorderColorDefaultBrush}"
                                         BorderThickness="1"
-                                        CornerRadius="8"
+                                        CornerRadius="7"
                                         SnapsToDevicePixels="True">
                                         <Border.Background>
                                             <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />

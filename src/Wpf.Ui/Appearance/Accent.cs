@@ -214,6 +214,10 @@ public static class Accent
         Application.Current.Resources["SystemAccentColorTertiary"] = tertiaryAccent;
 
         Application.Current.Resources["SystemAccentBrush"] = secondaryAccent.ToBrush();
+        Application.Current.Resources["SystemAccentColorBrush"] = systemAccent.ToBrush();
+        Application.Current.Resources["SystemAccentColorPrimaryBrush"] = primaryAccent.ToBrush();
+        Application.Current.Resources["SystemAccentColorSecondaryBrush"] = secondaryAccent.ToBrush();
+        Application.Current.Resources["SystemAccentColorTertiaryBrush"] = tertiaryAccent.ToBrush();
         Application.Current.Resources["SystemFillColorAttentionBrush"] = secondaryAccent.ToBrush();
         Application.Current.Resources["AccentTextFillColorPrimaryBrush"] = tertiaryAccent.ToBrush();
         Application.Current.Resources["AccentTextFillColorSecondaryBrush"] = tertiaryAccent.ToBrush();

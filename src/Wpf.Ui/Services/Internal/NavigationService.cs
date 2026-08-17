@@ -239,6 +239,7 @@ internal sealed class NavigationService : IDisposable
             frameworkElement,
             new NavigationServiceExtraData
             {
+                ActionIdentifier = _currentActionIdentifier,
                 PageId = -1,
                 Cache = false,
                 DataContext = dataContext
@@ -269,6 +270,7 @@ internal sealed class NavigationService : IDisposable
             frameworkElementUri,
             new NavigationServiceExtraData
             {
+                ActionIdentifier = _currentActionIdentifier,
                 PageId = -1,
                 Cache = false,
                 DataContext = dataContext
@@ -345,10 +347,8 @@ internal sealed class NavigationService : IDisposable
 
         _navigationServiceItems = serviceItemCollection.ToArray();
 
-        // Should we precache here? It can be intensive cause the update can be fired multiple times during initialization
-        //if (Precache)
-        //{
-        //}
+        if (Precache)
+            PrecacheItems();
     }
 
     /// <summary>
@@ -368,6 +368,12 @@ internal sealed class NavigationService : IDisposable
     {
         if (frame == null)
             return;
+
+        if (_frame != null)
+        {
+            _frame.Navigating -= OnFrameNavigating;
+            _frame.Navigated -= OnFrameNavigated;
+        }
 
         _frame = frame;
 
@@ -460,6 +466,13 @@ internal sealed class NavigationService : IDisposable
         if (!disposing)
             return;
 
+        if (_frame != null)
+        {
+            _frame.Navigating -= OnFrameNavigating;
+            _frame.Navigated -= OnFrameNavigated;
+            _frame = null;
+        }
+
 #if DEBUG
         System.Diagnostics.Debug.WriteLine($"INFO | {typeof(NavigationService)} disposed.", "Wpf.Ui.Navigation");
 #endif
@@ -531,6 +544,7 @@ internal sealed class NavigationService : IDisposable
                 _navigationServiceItems[serviceItemId].Instance,
                 new NavigationServiceExtraData
                 {
+                    ActionIdentifier = _currentActionIdentifier,
                     PageId = serviceItemId,
                     Cache = true,
                     DataContext = dataContext
@@ -553,6 +567,7 @@ internal sealed class NavigationService : IDisposable
                 _navigationServiceItems[serviceItemId].Instance,
                 new NavigationServiceExtraData
                 {
+                    ActionIdentifier = _currentActionIdentifier,
                     PageId = serviceItemId,
                     Cache = true,
                     DataContext = null // DataContext used 
@@ -573,6 +588,7 @@ internal sealed class NavigationService : IDisposable
                 _navigationServiceItems[serviceItemId].Source,
                 new NavigationServiceExtraData
                 {
+                    ActionIdentifier = _currentActionIdentifier,
                     PageId = serviceItemId,
                     Cache = true,
                     DataContext = dataContext
@@ -612,6 +628,7 @@ internal sealed class NavigationService : IDisposable
                 ),
                 new NavigationServiceExtraData
                 {
+                    ActionIdentifier = _currentActionIdentifier,
                     PageId = serviceItemId,
                     Cache = false,
                     DataContext = null // DataContext set above by activator
@@ -630,6 +647,7 @@ internal sealed class NavigationService : IDisposable
                 _navigationServiceItems[serviceItemId].Source,
                 new NavigationServiceExtraData
                 {
+                    ActionIdentifier = _currentActionIdentifier,
                     PageId = serviceItemId,
                     Cache = false,
                     DataContext = dataContext
@@ -730,7 +748,7 @@ internal sealed class NavigationService : IDisposable
             return;
         }
 
-        if (!_currentActionIdentifier.Equals(_currentActionIdentifier))
+        if (extraData.ActionIdentifier != _currentActionIdentifier)
         {
             // Only god knows what's broken, but notify anyway and then leave.
             NotifyFrameContentAboutEnter();
@@ -852,13 +870,30 @@ internal sealed class NavigationService : IDisposable
     /// <summary>
     /// Precaches instances of the navigation items.
     /// </summary>
-    private void PrecacheItems()
+    internal void PrecacheItems()
     {
         if (DesignerHelper.IsInDesignMode)
             return;
 
         if (_pageService != null)
             return;
+
+        foreach (var item in _navigationServiceItems)
+        {
+            if (!item.Cache || item.Instance != null)
+                continue;
+            try
+            {
+                if (item.Type != null)
+                    item.Instance = CreateFrameworkElementInstance(item.Type, null);
+                else if (item.Source != null)
+                    item.Instance = Application.LoadComponent(item.Source);
+            }
+            catch
+            {
+                item.Instance = null;
+            }
+        }
     }
 
     #endregion

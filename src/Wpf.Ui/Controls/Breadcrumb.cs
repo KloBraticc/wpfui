@@ -52,8 +52,6 @@ public class Breadcrumb : System.Windows.Controls.Control
         System.Diagnostics.Debug.WriteLine($"INFO | {typeof(Breadcrumb)} builded, current nav: {Navigation.GetType()}", "Wpf.Ui.Breadcrumb");
 #endif
 
-        //TODO: Navigate with previous levels
-
         if (Navigation?.Current is not INavigationItem item)
             return;
 
@@ -67,6 +65,10 @@ public class Breadcrumb : System.Windows.Controls.Control
 
     protected virtual void OnNavigationChanged()
     {
+        if (Navigation == null)
+            return;
+
+        Navigation.Navigated -= OnNavigated;
         Navigation.Navigated += OnNavigated;
     }
 
@@ -74,6 +76,9 @@ public class Breadcrumb : System.Windows.Controls.Control
     {
         if (d is not Breadcrumb breadcrumb)
             return;
+
+        if (e.OldValue is INavigation oldNavigation)
+            oldNavigation.Navigated -= breadcrumb.OnNavigated;
 
         breadcrumb.OnNavigationChanged();
     }

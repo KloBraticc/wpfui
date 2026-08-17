@@ -1,4 +1,4 @@
-﻿<!--
+<!--
     This Source Code Form is subject to the terms of the MIT License.
     If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
     Copyright (C) Leszek Pomianowski and WPF UI Contributors.
@@ -8,7 +8,6 @@
     Copyright (c) Microsoft Corporation. All Rights Reserved.
 -->
 
-<!--  TODO: Refactor editable and fix borders  -->
 
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -17,14 +16,25 @@
     xmlns:converters="clr-namespace:Wpf.Ui.Converters"
     xmlns:system="clr-namespace:System;assembly=System.Runtime">
 
-    <Thickness x:Key="ComboBoxPadding">10,8,10,8</Thickness>
+    <Thickness x:Key="ComboBoxPadding">11,0,11,0</Thickness>
     <Thickness x:Key="ComboBoxBorderThemeThickness">1,1,1,1</Thickness>
-    <Thickness x:Key="ComboBoxAccentBorderThemeThickness">0,0,0,2</Thickness>
-    <Thickness x:Key="ComboBoxChevronMargin">8,0,10,0</Thickness>
-    <Thickness x:Key="ComboBoxItemMargin">3,2,3,0</Thickness>
-    <Thickness x:Key="ComboBoxItemContentMargin">10,8,8,8</Thickness>
-    <system:Double x:Key="ComboBoxChevronSize">11.0</system:Double>
-    <system:Double x:Key="ComboBoxPopupMinHeight">32.0</system:Double>
+    <Thickness x:Key="ComboBoxAccentBorderThemeThickness">0,0,0,1</Thickness>
+    <Thickness x:Key="ComboBoxChevronMargin">0,0,4,0</Thickness>
+    <Thickness x:Key="ComboBoxItemMargin">5,3,5,0</Thickness>
+    <Thickness x:Key="ComboBoxItemContentMargin">11,10,11,10</Thickness>
+    <system:Double x:Key="ComboBoxChevronSize">14.0</system:Double>
+    <system:Double x:Key="ComboBoxMinHeight">34.0</system:Double>
+    <system:Double x:Key="ComboBoxPopupMinHeight">46.0</system:Double>
+    <system:Double x:Key="ComboBoxPopupMaxHeight">300.0</system:Double>
+
+    <Duration x:Key="ComboBoxPopupDuration">0:0:0.667</Duration>
+    <Duration x:Key="ComboBoxPopupFadeDuration">0:0:0.070</Duration>
+    <Duration x:Key="ComboBoxPopupCloseDuration">0:0:0.150</Duration>
+    <Duration x:Key="ComboBoxAppearanceDuration">0:0:0.187</Duration>
+    <Duration x:Key="ComboBoxChevronDuration">0:0:0.375</Duration>
+    <QuinticEase x:Key="ComboBoxPopupEase" EasingMode="EaseOut" />
+    <QuarticEase x:Key="ComboBoxFadeEase" EasingMode="EaseInOut" />
+    <QuarticEase x:Key="ComboBoxEase" EasingMode="EaseOut" />
 
     <Style x:Key="DefaultComboBoxTextBoxStyle" TargetType="{x:Type TextBox}">
         <!--  Focus by parent element  -->
@@ -113,48 +123,81 @@
         <Setter Property="Padding" Value="{StaticResource ComboBoxItemContentMargin}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Border.CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+        <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="controls:RinControlMotion.Enabled" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ComboBoxItem}">
-                    <Grid>
-                        <Border
-                            Name="ContentBorder"
-                            Margin="{TemplateBinding Margin}"
-                            Padding="0"
-                            VerticalAlignment="Stretch"
-                            CornerRadius="{TemplateBinding Border.CornerRadius}"
-                            SnapsToDevicePixels="True">
-                            <Grid>
-                                <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
-                                <Rectangle
-                                    x:Name="ActiveRectangle"
-                                    Width="3"
-                                    Height="16"
-                                    Margin="0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    RadiusX="2"
-                                    RadiusY="2"
-                                    Visibility="Collapsed">
-                                    <Rectangle.Fill>
-                                        <SolidColorBrush Color="{DynamicResource SystemAccentColorSecondary}" />
-                                    </Rectangle.Fill>
-                                </Rectangle>
-                            </Grid>
-                        </Border>
-                    </Grid>
+                    <Border
+                        x:Name="ContentBorder"
+                        Margin="{TemplateBinding Margin}"
+                        VerticalAlignment="Stretch"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding Border.CornerRadius}"
+                        SnapsToDevicePixels="True">
+                        <Grid>
+                            <Border
+                                x:Name="AccentPill"
+                                Width="3"
+                                Height="5"
+                                Margin="3,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                CornerRadius="1.5"
+                                Opacity="0"
+                                SnapsToDevicePixels="True" />
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                VerticalAlignment="Center"
+                                TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                TextElement.FontSize="{TemplateBinding FontSize}"
+                                TextElement.FontStretch="{TemplateBinding FontStretch}"
+                                TextElement.FontStyle="{TemplateBinding FontStyle}"
+                                TextElement.FontWeight="{TemplateBinding FontWeight}"
+                                TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Grid>
+                    </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="ContentBorder" Property="Background">
-                                <Setter.Value>
-                                    <SolidColorBrush Color="{DynamicResource ControlFillColorSecondary}" />
-                                </Setter.Value>
-                            </Setter>
-                        </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="ActiveRectangle" Property="Visibility" Value="Visible" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="AccentPill"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="1"
+                                            Duration="0:0:0.12" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="AccentPill"
+                                            Storyboard.TargetProperty="Height"
+                                            To="16"
+                                            Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <PowerEase EasingMode="EaseOut" Power="3" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="AccentPill"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0"
+                                            Duration="0:0:0.10" />
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="AccentPill"
+                                            Storyboard.TargetProperty="Height"
+                                            To="5"
+                                            Duration="0:0:0.10" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground">
@@ -162,6 +205,7 @@
                                     <SolidColorBrush Color="{DynamicResource TextFillColorTertiary}" />
                                 </Setter.Value>
                             </Setter>
+                            <Setter TargetName="AccentPill" Property="Background" Value="{DynamicResource ControlFillColorDisabledBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -189,22 +233,29 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
         <Setter Property="BorderThickness" Value="{StaticResource ComboBoxBorderThemeThickness}" />
         <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
-        <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
         <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="False" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+        <Setter Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Top" />
-        <Setter Property="MinHeight" Value="{DynamicResource TextControlThemeMinHeight}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="MinHeight" Value="{StaticResource ComboBoxMinHeight}" />
         <Setter Property="MinWidth" Value="{DynamicResource TextControlThemeMinWidth}" />
         <Setter Property="Padding" Value="{DynamicResource ComboBoxPadding}" />
+        <Setter Property="MaxDropDownHeight" Value="{StaticResource ComboBoxPopupMaxHeight}" />
         <Setter Property="Border.CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
-        <Setter Property="Popup.PopupAnimation" Value="Slide" />
+        <Setter Property="Popup.PopupAnimation" Value="None" />
         <!--  WPF doesn't like centering, the animation is ugly and the mouse button sometimes clicks right away.  -->
         <Setter Property="Popup.Placement" Value="Bottom" />
+        <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="controls:RinControlMotion.Enabled" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ComboBox}">
@@ -241,24 +292,40 @@
                                             ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                             ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
                                             IsHitTestVisible="False"
-                                            TextElement.Foreground="{TemplateBinding Foreground}" />
+                                            SnapsToDevicePixels="True"
+                                            TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                            TextElement.FontSize="{TemplateBinding FontSize}"
+                                            TextElement.FontStretch="{TemplateBinding FontStretch}"
+                                            TextElement.FontStyle="{TemplateBinding FontStyle}"
+                                            TextElement.FontWeight="{TemplateBinding FontWeight}"
+                                            TextElement.Foreground="{TemplateBinding Foreground}">
+                                            <ContentPresenter.RenderTransform>
+                                                <TranslateTransform X="0" />
+                                            </ContentPresenter.RenderTransform>
+                                        </ContentPresenter>
                                     </Grid>
                                     <Grid Grid.Column="1" Margin="{StaticResource ComboBoxChevronMargin}">
-                                        <controls:SymbolIcon
-                                            x:Name="ChevronIcon"
+                                        <Grid
+                                            x:Name="ChevronGrid"
                                             Margin="0"
-                                            Padding="0"
                                             VerticalAlignment="Center"
-                                            FontSize="{StaticResource ComboBoxChevronSize}"
-                                            RenderTransformOrigin="0.5, 0.5"
-                                            Symbol="ChevronDown24">
-                                            <controls:SymbolIcon.RenderTransform>
+                                            Background="Transparent"
+                                            RenderTransformOrigin="0.5, 0.5">
+                                            <Grid.RenderTransform>
                                                 <RotateTransform Angle="0" />
-                                            </controls:SymbolIcon.RenderTransform>
-                                            <controls:SymbolIcon.Foreground>
-                                                <SolidColorBrush Color="{DynamicResource TextFillColorSecondary}" />
-                                            </controls:SymbolIcon.Foreground>
-                                        </controls:SymbolIcon>
+                                            </Grid.RenderTransform>
+                                            <controls:SymbolIcon
+                                                x:Name="ChevronIcon"
+                                                Margin="0"
+                                                Padding="0"
+                                                VerticalAlignment="Center"
+                                                FontSize="{StaticResource ComboBoxChevronSize}"
+                                                Symbol="ChevronDown24">
+                                                <controls:SymbolIcon.Foreground>
+                                                    <SolidColorBrush Color="{DynamicResource TextFillColorSecondary}" />
+                                                </controls:SymbolIcon.Foreground>
+                                            </controls:SymbolIcon>
+                                        </Grid>
                                     </Grid>
                                     <Grid
                                         Grid.Column="0"
@@ -279,7 +346,11 @@
                                             x:Name="PART_EditableTextBox"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"
+                                            FontFamily="{TemplateBinding FontFamily}"
                                             FontSize="{TemplateBinding FontSize}"
+                                            FontStretch="{TemplateBinding FontStretch}"
+                                            FontStyle="{TemplateBinding FontStyle}"
+                                            FontWeight="{TemplateBinding FontWeight}"
                                             Foreground="{TemplateBinding Foreground}"
                                             IsReadOnly="{TemplateBinding IsReadOnly}"
                                             Style="{StaticResource DefaultComboBoxTextBoxStyle}" />
@@ -287,45 +358,94 @@
                                 </Grid>
                                 <Popup
                                     x:Name="Popup"
-                                    MinWidth="{TemplateBinding ActualWidth}"
                                     VerticalAlignment="Center"
                                     AllowsTransparency="True"
                                     Focusable="False"
-                                    IsOpen="{TemplateBinding IsDropDownOpen}"
+                                    HorizontalOffset="-12"
+                                    controls:PopupReveal.CloseTarget="{TemplateBinding IsDropDownOpen}"
+                                    controls:PopupReveal.CloseDuration="{StaticResource ComboBoxPopupCloseDuration}"
+                                    IsOpen="{Binding Path=(controls:PopupReveal.EffectiveIsOpen), RelativeSource={RelativeSource Self}, Mode=OneWay}"
                                     Placement="{TemplateBinding Popup.Placement}"
-                                    PopupAnimation="{TemplateBinding Popup.PopupAnimation}"
-                                    VerticalOffset="1">
-                                    <Border
+                                    PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                    PopupAnimation="None"
+                                    StaysOpen="False"
+                                    VerticalOffset="4">
+                                    <Grid>
+                                    <Grid
                                         x:Name="DropDownBorder"
-                                        Margin="0"
-                                        Padding="0,4,0,6"
-                                        BorderBrush="{DynamicResource MenuBorderColorDefaultBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="{DynamicResource PopupCornerRadius}"
-                                        SnapsToDevicePixels="True">
-                                        <Border.Background>
-                                            <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
-                                        </Border.Background>
-                                        <Grid>
-                                            <controls:DynamicScrollViewer
-                                                MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                                                Margin="0"
-                                                HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
-                                                SnapsToDevicePixels="True"
-                                                TextElement.FontSize="{TemplateBinding FontSize}"
-                                                TextElement.FontWeight="{TemplateBinding FontWeight}"
-                                                TextElement.Foreground="{TemplateBinding Foreground}"
-                                                VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
-                                                <StackPanel
-                                                    IsItemsHost="True"
-                                                    KeyboardNavigation.DirectionalNavigation="Contained"
-                                                    TextElement.FontSize="{TemplateBinding FontSize}" />
-                                            </controls:DynamicScrollViewer>
-                                        </Grid>
-                                    </Border>
+                                        MinWidth="{Binding ActualWidth, ElementName=ContentBorder}"
+                                        MaxHeight="{StaticResource ComboBoxPopupMaxHeight}"
+                                        Margin="12,0,12,20"
+                                        SnapsToDevicePixels="True"
+                                        controls:PopupReveal.FromHeight="{StaticResource ComboBoxPopupMinHeight}"
+                                        controls:PopupReveal.MaximumHeight="{StaticResource ComboBoxPopupMaxHeight}"
+                                        controls:PopupReveal.Duration="{StaticResource ComboBoxPopupDuration}"
+                                        controls:PopupReveal.FadeDuration="{StaticResource ComboBoxPopupFadeDuration}">
+                                        <Border
+                                            CornerRadius="{DynamicResource PopupCornerRadius}"
+                                            IsHitTestVisible="False">
+                                            <Border.Background>
+                                                <SolidColorBrush Color="{DynamicResource ComboBoxPopupAcrylicBackground}" />
+                                            </Border.Background>
+                                            <Border.CacheMode>
+                                                <BitmapCache />
+                                            </Border.CacheMode>
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.35" Color="#000000" Direction="270" />
+                                            </Border.Effect>
+                                        </Border>
+                                        <Border
+                                            Padding="0,2,0,2"
+                                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{DynamicResource PopupCornerRadius}">
+                                            <Border.Background>
+                                                <SolidColorBrush Color="{DynamicResource ComboBoxPopupAcrylicBackground}" />
+                                            </Border.Background>
+                                            <Border x:Name="DropDownContent" BorderThickness="0" ClipToBounds="True" CornerRadius="{DynamicResource PopupCornerRadius}" Padding="0">
+                                              <Grid>
+                                                <controls:DynamicScrollViewer
+                                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                                    Margin="0"
+                                                    CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
+                                                    HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                                    IsDeferredScrollingEnabled="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
+                                                    SnapsToDevicePixels="True"
+                                                    TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                                    TextElement.FontSize="{TemplateBinding FontSize}"
+                                                    TextElement.FontStretch="{TemplateBinding FontStretch}"
+                                                    TextElement.FontStyle="{TemplateBinding FontStyle}"
+                                                    TextElement.FontWeight="{TemplateBinding FontWeight}"
+                                                    TextElement.Foreground="{TemplateBinding Foreground}"
+                                                    VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                                                    <VirtualizingStackPanel
+                                                        IsItemsHost="True"
+                                                        IsVirtualizing="True"
+                                                        IsVirtualizingWhenGrouping="True"
+                                                        VirtualizationMode="Recycling"
+                                                        ScrollUnit="Pixel"
+                                                        CacheLength="0.5"
+                                                        CacheLengthUnit="Page"
+                                                        KeyboardNavigation.DirectionalNavigation="Contained"
+                                                        TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                                        TextElement.FontSize="{TemplateBinding FontSize}" />
+                                                </controls:DynamicScrollViewer>
+                                              </Grid>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+                                    </Grid>
                                 </Popup>
                             </Grid>
                         </Border>
+                        <Border
+                            x:Name="BottomBorder"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            BorderBrush="{DynamicResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="{StaticResource ComboBoxAccentBorderThemeThickness}"
+                            CornerRadius="{TemplateBinding Border.CornerRadius}"
+                            SnapsToDevicePixels="True" />
                         <Border
                             x:Name="AccentBorder"
                             HorizontalAlignment="Stretch"
@@ -344,11 +464,14 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation
-                                            Storyboard.TargetName="ChevronIcon"
-                                            Storyboard.TargetProperty="(controls:SymbolIcon.RenderTransform).(RotateTransform.Angle)"
-                                            From="0"
+                                            Storyboard.TargetName="ChevronGrid"
+                                            Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
                                             To="180"
-                                            Duration="00:00:00.167" />
+                                            Duration="{StaticResource ComboBoxChevronDuration}">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuarticEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -356,23 +479,20 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation
-                                            Storyboard.TargetName="ChevronIcon"
-                                            Storyboard.TargetProperty="(controls:SymbolIcon.RenderTransform).(RotateTransform.Angle)"
-                                            From="180"
+                                            Storyboard.TargetName="ChevronGrid"
+                                            Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
                                             To="0"
-                                            Duration="00:00:00.167" />
+                                            Duration="{StaticResource ComboBoxChevronDuration}">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuarticEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="HasItems" Value="False">
                             <Setter TargetName="DropDownBorder" Property="MinHeight" Value="{StaticResource ComboBoxPopupMinHeight}" />
-                        </Trigger>
-                        <Trigger SourceName="Popup" Property="Popup.AllowsTransparency" Value="False">
-                            <Setter TargetName="DropDownBorder" Property="CornerRadius" Value="0" />
-                        </Trigger>
-                        <Trigger Property="IsGrouping" Value="True">
-                            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
                         </Trigger>
                         <Trigger Property="IsEditable" Value="True">
                             <Setter Property="IsTabStop" Value="False" />
@@ -385,30 +505,8 @@
                                 <Condition Property="IsKeyboardFocusWithin" Value="True" />
                                 <Condition Property="IsEditable" Value="True" />
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="ContentBorder" Property="Background">
-                                <Setter.Value>
-                                    <SolidColorBrush Color="{DynamicResource ControlFillColorInputActive}" />
-                                </Setter.Value>
-                            </Setter>
                             <Setter TargetName="AccentBorder" Property="Visibility" Value="Visible" />
                         </MultiTrigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsEnabled" Value="True" />
-                                <Condition Property="IsMouseOver" Value="True" />
-                                <Condition Property="IsKeyboardFocusWithin" Value="False" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="ContentBorder" Property="Background">
-                                <Setter.Value>
-                                    <SolidColorBrush Color="{DynamicResource ControlFillColorSecondary}" />
-                                </Setter.Value>
-                            </Setter>
-                        </MultiTrigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="ContentBorder" Property="Background" Value="{DynamicResource ControlFillColorDisabledBrush}" />
-                            <Setter TargetName="ContentBorder" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
-                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}" />
-                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

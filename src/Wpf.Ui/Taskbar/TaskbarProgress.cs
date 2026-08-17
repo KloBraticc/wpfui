@@ -36,10 +36,13 @@ public static class TaskBarProgress
         if (window.IsLoaded)
             return SetState(new WindowInteropHelper(window).Handle, taskBarProgressState);
 
-        window.Loaded += (_, _) =>
+        window.Loaded += OnLoaded;
+
+        void OnLoaded(object sender, RoutedEventArgs e)
         {
+            window.Loaded -= OnLoaded;
             SetState(new WindowInteropHelper(window).Handle, taskBarProgressState);
-        };
+        }
 
         return true;
     }
@@ -89,10 +92,13 @@ public static class TaskBarProgress
         if (window.IsLoaded)
             return SetValue(new WindowInteropHelper(window).Handle, taskBarProgressState, current, total);
 
-        window.Loaded += (_, _) =>
+        window.Loaded += OnLoaded;
+
+        void OnLoaded(object sender, RoutedEventArgs e)
         {
+            window.Loaded -= OnLoaded;
             SetValue(new WindowInteropHelper(window).Handle, taskBarProgressState, current, total);
-        };
+        }
 
         return false;
     }

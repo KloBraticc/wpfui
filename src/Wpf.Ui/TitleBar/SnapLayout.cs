@@ -16,9 +16,12 @@ namespace Wpf.Ui.TitleBar
     /// <summary>
     /// Enables Windows 11 Snap Layout functionality for a custom <see cref="Controls.TitleBar"/>.
     /// </summary>
-    internal sealed class SnapLayout : IThemeControl
+    internal sealed class SnapLayout : IThemeControl, IDisposable
     {
-        private readonly SnapLayoutButton[] _buttons;
+        private SnapLayoutButton[] _buttons = Array.Empty<SnapLayoutButton>();
+        private HwndSource? _source;
+        private Window? _window;
+        private bool _disposed;
         private ThemeType _currentTheme;
         private SolidColorBrush _currentHoverColor = Brushes.Transparent;
 
@@ -68,7 +71,10 @@ namespace Wpf.Ui.TitleBar
                 new SnapLayoutButton(restoreButton, TitleBarButton.Restore, dpiScale)
             };
 
-            HwndSource.FromHwnd(hwnd)?.AddHook(WndProc);
+            _window = window;
+            _source = HwndSource.FromHwnd(hwnd);
+            _source?.AddHook(WndProc);
+            _window.Closed += OnWindowClosed;
         }
 
         /// <summary>
@@ -87,6 +93,13 @@ namespace Wpf.Ui.TitleBar
         /// </summary>
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            if (msg == 0x02E0)
+            {
+                var dpiScale = DpiHelper.GetWindowDpi(hwnd).DpiScaleX;
+                foreach (var button in _buttons)
+                    button.UpdateScale(dpiScale);
+            }
+
             var message = (Interop.User32.WM)msg;
 
             switch (message)
@@ -112,6 +125,29 @@ namespace Wpf.Ui.TitleBar
             }
 
             return IntPtr.Zero;
+        }
+
+        private void OnWindowClosed(object? sender, EventArgs e)
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            _source?.RemoveHook(WndProc);
+            _source = null;
+            if (_window != null)
+            {
+                _window.Closed -= OnWindowClosed;
+                _window = null;
+            }
+            foreach (var button in _buttons)
+                button.Dispose();
+            _buttons = Array.Empty<SnapLayoutButton>();
+            GC.SuppressFinalize(this);
         }
 
         private void RemoveHoverFromAll()

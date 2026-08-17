@@ -54,7 +54,7 @@
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="1.0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -66,7 +66,7 @@
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Opacity)"
                                             From="1.0"
                                             To="0.0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -83,7 +83,7 @@
         <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
-        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Standard" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="ItemsPanel">

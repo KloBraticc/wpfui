@@ -78,6 +78,7 @@
                                         <BeginStoryboard>
                                             <Storyboard>
                                                 <DoubleAnimation
+                                                    Timeline.DesiredFrameRate="60"
                                                     RepeatBehavior="Forever"
                                                     Storyboard.TargetName="Arc"
                                                     Storyboard.TargetProperty="(Canvas.RenderTransform).(RotateTransform.Angle)"
@@ -85,6 +86,7 @@
                                                     Duration="0:0:2" />
 
                                                 <DoubleAnimation
+                                                    Timeline.DesiredFrameRate="60"
                                                     AutoReverse="True"
                                                     RepeatBehavior="Forever"
                                                     Storyboard.TargetName="Arc"

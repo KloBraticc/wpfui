@@ -20,6 +20,6 @@
     <FontFamily x:Key="FluentSystemIconsFilled">pack://application:,,,/Wpf.Ui;component/Fonts/#FluentSystemIcons-Filled</FontFamily>
 
     <!--  https://github.com/tonsky/FiraCode  -->
-    <FontFamily x:Key="FiraCode">pack://application:,,,/Wpf.Ui;component/Fonts/#Fira Code</FontFamily>
+    <FontFamily x:Key="FiraCode">Consolas</FontFamily>
 
 </ResourceDictionary>

@@ -1,10 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Microsoft.Build.CentralPackageVersions" Version="2.1.3" />
 
   <PropertyGroup>
     <ProjectGuid>{1ADC87D1-8963-4100-845A-18477824718E}</ProjectGuid>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Wpf.Ui</RootNamespace>
@@ -16,7 +15,20 @@
     <UseWPF>true</UseWPF>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateLibraryLayout>true</GenerateLibraryLayout>
+    <NoWarn>$(NoWarn);CS8632;CS8669;CS8600;CS8601;CS8602;CS8603;CS8604;CS8612;CS8618;CS8620;CS8622;CS8625;CS8714</NoWarn>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <EnableSourceLink>false</EnableSourceLink>
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="obj-*\**;bin-cross\**" />
+    <Page Remove="obj-*\**;bin-cross\**" />
+    <None Remove="obj-*\**;bin-cross\**" />
+    <EmbeddedResource Remove="obj-*\**;bin-cross\**" />
+    <Resource Remove="obj-*\**;bin-cross\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="VisualStudioToolsManifest.xml" Pack="true" PackagePath="tools" />
@@ -30,7 +42,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Fonts\FiraCode-Regular.ttf" />
     <Resource Include="Fonts\FluentSystemIcons-Filled.ttf" />
     <Resource Include="Fonts\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
@@ -50,16 +61,7 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'net461'">
-    <PackageReference Include="System.Drawing.Common" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
-    <PackageReference Include="System.ValueTuple" />
-  </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

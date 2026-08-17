@@ -468,6 +468,6 @@ public class Snackbar : System.Windows.Controls.ContentControl, ISnackbarControl
 
         await HideComponentAsync(0);
 
-        await Task.Delay(300);
+        await Task.Delay(180);
     }
 }

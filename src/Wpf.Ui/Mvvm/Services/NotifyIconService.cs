@@ -3,6 +3,7 @@
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
 
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,9 +15,10 @@ namespace Wpf.Ui.Mvvm.Services;
 /// <summary>
 /// Base implementation of the notify icon service.
 /// </summary>
-public class NotifyIconService : INotifyIconService
+public class NotifyIconService : INotifyIconService, IDisposable
 {
     private readonly Wpf.Ui.Services.Internal.NotifyIconService _notifyIconService;
+    private bool _disposed;
 
     public Window ParentWindow { get; internal set; } = (Window)null!;
 
@@ -116,7 +118,7 @@ public class NotifyIconService : INotifyIconService
 
     private void OnParentWindowClosing(object sender, CancelEventArgs e)
     {
-        _notifyIconService.Dispose();
+        Dispose();
     }
 
     private void RegisterHandlers()
@@ -128,5 +130,24 @@ public class NotifyIconService : INotifyIconService
         _notifyIconService.MiddleClick += OnMiddleClick;
         _notifyIconService.MiddleDoubleClick += OnMiddleDoubleClick;
     }
-}
 
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        if (ParentWindow != null)
+            ParentWindow.Closing -= OnParentWindowClosing;
+
+        _notifyIconService.LeftClick -= OnLeftClick;
+        _notifyIconService.LeftDoubleClick -= OnLeftDoubleClick;
+        _notifyIconService.RightClick -= OnRightClick;
+        _notifyIconService.RightDoubleClick -= OnRightDoubleClick;
+        _notifyIconService.MiddleClick -= OnMiddleClick;
+        _notifyIconService.MiddleDoubleClick -= OnMiddleDoubleClick;
+        _notifyIconService.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

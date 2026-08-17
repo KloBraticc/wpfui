@@ -6,6 +6,11 @@
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Wpf.Ui.Cross'">
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)Wpf.Ui\obj-cross\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+
   <PropertyGroup>
     <Authors>lepo.co</Authors>
     <Company>lepo.co</Company>

@@ -363,9 +363,6 @@ public class NavigationItem : System.Windows.Controls.Primitives.ButtonBase, IUr
 
         if (baseUri == null)
         {
-            // TODO: Force extracting BaseUri for Designer
-            // This is a hackery solution that needs to be refined.
-
             if (!DesignerHelper.IsInDesignMode)
                 throw new UriFormatException("Unable to resolve absolute URI for selected page");
 

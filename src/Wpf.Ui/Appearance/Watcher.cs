@@ -15,8 +15,10 @@ namespace Wpf.Ui.Appearance;
 /// Automatically updates the application background if the system theme or color is changed.
 /// <para><see cref="Watcher"/> settings work globally and cannot be changed for each <see cref="System.Windows.Window"/>.</para>
 /// </summary>
-public sealed class Watcher
+public sealed class Watcher : IDisposable
 {
+    private HwndSource? _source;
+    private bool _disposed;
     /// <summary>
     /// Gets or sets a value that indicates whether the <see cref="Watcher"/> uses custom <see cref="BackgroundType"/>.
     /// </summary>
@@ -69,8 +71,12 @@ public sealed class Watcher
             return;
         }
 
-        window.Loaded += (sender, args) =>
+        window.Loaded += OnLoaded;
+
+        void OnLoaded(object sender, RoutedEventArgs e)
         {
+            window.Loaded -= OnLoaded;
+
             // Get the handle from the window
             IntPtr hwnd =
                 (hwnd = new WindowInteropHelper(window).Handle) == IntPtr.Zero
@@ -83,7 +89,7 @@ public sealed class Watcher
             // Updates themes on initialization if the current system theme is different from the app's.
             var currentSystemTheme = SystemTheme.GetTheme();
             watcher.UpdateThemes(currentSystemTheme);
-        };
+        }
     }
 
     /// <summary>
@@ -95,13 +101,17 @@ public sealed class Watcher
     /// <param name="forceBackground">If <see langword="true"/>, bypasses the app's theme compatibility check and tries to force the change of a background effect.</param>
     public Watcher(IntPtr hWnd, BackgroundType backgroundEffect, bool updateAccents, bool forceBackground)
     {
-        var hWndSource = HwndSource.FromHwnd(hWnd);
+        _source = HwndSource.FromHwnd(hWnd);
 
         BackgroundEffect = backgroundEffect;
         ForceBackground = forceBackground;
         UpdateAccents = updateAccents;
 
-        hWndSource?.AddHook(WndProc);
+        if (_source != null)
+        {
+            _source.AddHook(WndProc);
+            _source.Disposed += OnSourceDisposed;
+        }
     }
 
     /// <summary>
@@ -137,5 +147,24 @@ public sealed class Watcher
         System.Diagnostics.Debug.WriteLine($"INFO | Current system theme: {AppearanceData.SystemTheme}",
             "Wpf.Ui.Watcher");
 #endif
+    }
+
+    private void OnSourceDisposed(object? sender, EventArgs e)
+    {
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+        if (_source != null)
+        {
+            _source.RemoveHook(WndProc);
+            _source.Disposed -= OnSourceDisposed;
+            _source = null;
+        }
+        GC.SuppressFinalize(this);
     }
 }

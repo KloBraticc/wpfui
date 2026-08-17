@@ -77,7 +77,7 @@ internal class Utilities
     {
         get
         {
-            if (!IsOSVistaOrNewer)
+            if (!IsOSVistaOrNewer || !System.OperatingSystem.IsWindows())
                 return false;
 
             Interop.Dwmapi.DwmIsCompositionEnabled(out var pfEnabled);

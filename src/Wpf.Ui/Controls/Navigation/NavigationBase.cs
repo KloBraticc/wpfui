@@ -65,7 +65,7 @@ public abstract class NavigationBase : System.Windows.Controls.Control, INavigat
     public static readonly DependencyProperty TransitionDurationProperty = DependencyProperty.Register(
         nameof(TransitionDuration),
         typeof(int), typeof(NavigationBase),
-        new PropertyMetadata(300, OnTransitionDurationChanged));
+        new PropertyMetadata(320, OnTransitionDurationChanged));
 
     /// <summary>
     /// Property for <see cref="TransitionType"/>.
@@ -468,9 +468,8 @@ public abstract class NavigationBase : System.Windows.Controls.Control, INavigat
         {
             if (PageService != null)
                 throw new InvalidOperationException("The cache cannot be used if you are using IPageService.");
-
-            // TODO: Precache
-            //await PrecacheInstances();
+            _navigationService!.Precache = true;
+            _navigationService.PrecacheItems();
         }
     }
 
@@ -557,18 +556,30 @@ public abstract class NavigationBase : System.Windows.Controls.Control, INavigat
         if (navigationItem.AbsolutePageSource == null && navigationItem.PageType == null)
             return;
 
-        if (PageService == null)
+        try
         {
-            Navigate(navigationItem.PageTag);
+            if (PageService == null)
+            {
+                Navigate(navigationItem.PageTag);
 
-            return;
+                return;
+            }
+
+            if (navigationItem.PageType == null)
+                throw new InvalidOperationException("When navigating through the IPageService, the navigated page type must be defined the INavigationItem.PageType.");
+
+            Navigate(navigationItem.PageType);
         }
-
-        if (navigationItem.PageType == null)
-            throw new InvalidOperationException("When navigating through the IPageService, the navigated page type must be defined the INavigationItem.PageType.");
-
-        Navigate(navigationItem.PageType);
+        catch (Exception exception)
+        {
+            NavigationFailed?.Invoke(this, new NavigationFailedEventArgs(navigationItem.PageTag, exception));
+        }
     }
+
+    /// <summary>
+    /// Raised when navigating to a page throws instead of terminating the application.
+    /// </summary>
+    public event EventHandler<NavigationFailedEventArgs>? NavigationFailed;
 
     /// <summary>
     /// This virtual method is called when something is added, deleted or changed in <see cref="Items"/> or <see cref="Footer"/>.
@@ -603,6 +614,9 @@ public abstract class NavigationBase : System.Windows.Controls.Control, INavigat
 
         navigationBase.InitializeServiceItems();
 
+        if (e.OldValue is ObservableCollection<INavigationControl> oldItemsCollection)
+            oldItemsCollection.CollectionChanged -= navigationBase.OnNavigationCollectionChanged;
+
         if (e.NewValue is not ObservableCollection<INavigationControl> itemsCollection)
             return;
 
@@ -618,6 +632,9 @@ public abstract class NavigationBase : System.Windows.Controls.Control, INavigat
             return;
 
         navigationBase.InitializeServiceItems();
+
+        if (e.OldValue is ObservableCollection<INavigationControl> oldItemsCollection)
+            oldItemsCollection.CollectionChanged -= navigationBase.OnNavigationCollectionChanged;
 
         if (e.NewValue is not ObservableCollection<INavigationControl> itemsCollection)
             return;

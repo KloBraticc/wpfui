@@ -238,6 +238,8 @@ internal class NotifyIconService : IDisposable, INotifyIcon
 
         Disposed = true;
 
+        Theme.Changed -= OnThemeChanged;
+
         if (!disposing)
             return;
 

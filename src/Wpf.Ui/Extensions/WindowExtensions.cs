@@ -60,11 +60,17 @@ public static class WindowExtensions
 
     private static void WindowRemoveStylesOnLoaded(object sender, RoutedEventArgs e)
     {
-        RemoveWindowStyles(sender as Window);
+        var window = sender as Window;
+        if (window != null)
+            window.Loaded -= WindowRemoveStylesOnLoaded;
+        RemoveWindowStyles(window);
     }
 
     private static void RemoveWindowStyles(Window window)
     {
+        if (!System.OperatingSystem.IsWindows())
+            return;
+
         var windowHandle = new WindowInteropHelper(window).Handle;
 
         // Default WPF window style NONE is WS_CAPTION
@@ -84,7 +90,15 @@ public static class WindowExtensions
         if (window.IsLoaded)
             UnsafeNativeMethods.RemoveWindowTitlebar(window);
         else
-            window.Loaded += (sender, args) => UnsafeNativeMethods.RemoveWindowTitlebar(window);
+        {
+            window.Loaded += OnLoaded;
+
+            void OnLoaded(object sender, RoutedEventArgs e)
+            {
+                window.Loaded -= OnLoaded;
+                UnsafeNativeMethods.RemoveWindowTitlebar(window);
+            }
+        }
 
         return window;
     }
@@ -131,7 +145,15 @@ public static class WindowExtensions
         if (window.IsLoaded)
             UnsafeNativeMethods.ApplyWindowCornerPreference(window, cornerPreference);
         else
-            window.Loaded += (sender, args) => UnsafeNativeMethods.ApplyWindowCornerPreference(window, cornerPreference);
+        {
+            window.Loaded += OnLoaded;
+
+            void OnLoaded(object sender, RoutedEventArgs e)
+            {
+                window.Loaded -= OnLoaded;
+                UnsafeNativeMethods.ApplyWindowCornerPreference(window, cornerPreference);
+            }
+        }
 
         return window;
     }

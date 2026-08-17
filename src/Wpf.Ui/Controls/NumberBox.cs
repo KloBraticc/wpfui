@@ -14,10 +14,6 @@ using System.Windows.Input;
 
 namespace Wpf.Ui.Controls;
 
-// TODO: Handle backspace
-// TODO: Handle editing
-// TODO: Implement mask
-
 /// <summary>
 /// Text field for entering numbers with the possibility of specifying a pattern.
 /// </summary>
@@ -30,12 +26,13 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// <summary>
     /// Accepts a string of digits separated by a comma or period. Allows for a leading minus sign.
     /// </summary>
-    private readonly string _decimalExpression = /* language=regex */ @"^\-?(\d+(?:[\.\,]|[\.\,]\d+)?)?$";
+    private static readonly Regex DecimalExpression = new(@"^\-?(\d+(?:[\.\,]|[\.\,]\d+)?)?$", RegexOptions.Compiled);
 
     /// <summary>
     /// Accepts a string of digits only. Allows for a leading minus sign.
     /// </summary>
-    private readonly string _integerExpression = /* language=regex */ @"^\-?(\d+)*$";
+    private static readonly Regex IntegerExpression = new(@"^\-?(\d+)*$", RegexOptions.Compiled);
+    private bool _updatingText;
 
     /// <summary>
     /// Property for <see cref="Value"/>.
@@ -103,7 +100,7 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     public new bool AcceptsReturn
     {
         get => false;
-        set => throw new NotImplementedException($"{typeof(NumberBox)} does not accept returns.");
+        set { }
     }
 
     /// <summary>
@@ -112,7 +109,7 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     public new int MaxLines
     {
         get => 1;
-        set => throw new NotImplementedException($"{typeof(NumberBox)} does not accept changes to the number of lines.");
+        set { }
     }
 
     /// <summary>
@@ -121,7 +118,7 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     public new int MinLines
     {
         get => 1;
-        set => throw new NotImplementedException($"{typeof(NumberBox)} does not accept changes to the number of lines.");
+        set { }
     }
 
     /// <summary>
@@ -216,9 +213,9 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
 
     static NumberBox()
     {
-        AcceptsReturnProperty.OverrideMetadata(typeof(PasswordBox), new FrameworkPropertyMetadata(false));
-        MaxLinesProperty.OverrideMetadata(typeof(PasswordBox), new FrameworkPropertyMetadata(1));
-        MinLinesProperty.OverrideMetadata(typeof(PasswordBox), new FrameworkPropertyMetadata(1));
+        AcceptsReturnProperty.OverrideMetadata(typeof(NumberBox), new FrameworkPropertyMetadata(false));
+        MaxLinesProperty.OverrideMetadata(typeof(NumberBox), new FrameworkPropertyMetadata(1));
+        MinLinesProperty.OverrideMetadata(typeof(NumberBox), new FrameworkPropertyMetadata(1));
     }
 
     /// <summary>
@@ -233,7 +230,9 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
 
     protected virtual void OnValueChanged()
     {
-
+        if (_updatingText)
+            return;
+        SetText(FormatDoubleToString(Value));
     }
 
     /// <inheritdoc/>
@@ -264,26 +263,18 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     private void UpdateValue(double value, bool updateText)
     {
-        Value = value;
-
-        if (!updateText)
-            return;
-
-        var newText = FormatDoubleToString(value);
-
-        Text = newText;
-        CaretIndex = newText.Length;
-    }
-
-    /// <summary>
-    /// Updates <see cref="Value"/> and <see cref="System.Windows.Controls.TextBox.Text"/>.
-    /// </summary>
-    private void UpdateValue(double value, string updateText)
-    {
-        Value = value;
-
-        Text = updateText;
-        CaretIndex = updateText.Length;
+        double clamped = Math.Min(Max, Math.Max(Min, value));
+        _updatingText = true;
+        try
+        {
+            SetCurrentValue(ValueProperty, clamped);
+            if (updateText)
+                SetText(FormatDoubleToString(clamped));
+        }
+        finally
+        {
+            _updatingText = false;
+        }
     }
 
     /// <summary>
@@ -291,19 +282,10 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     private void IncrementValue()
     {
-        var currentText = Text;
-        var parsedNumber = ParseStringToDouble(currentText) + Step;
-
-        if (String.IsNullOrWhiteSpace(currentText) || parsedNumber > Max)
-        {
-            UpdateValue(Max, true);
-
-            return;
-        }
-
-        UpdateValue(parsedNumber, true);
-
-        OnIncremented();
+        double previous = Value;
+        UpdateValue(Value + Step, true);
+        if (!Value.Equals(previous))
+            OnIncremented();
     }
 
     /// <summary>
@@ -311,19 +293,10 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     private void DecrementValue()
     {
-        var currentText = Text;
-        var parsedNumber = ParseStringToDouble(currentText) - Step;
-
-        if (String.IsNullOrWhiteSpace(currentText) || parsedNumber < Min)
-        {
-            UpdateValue(Min, true);
-
-            return;
-        }
-
-        UpdateValue(parsedNumber, true);
-
-        OnDecremented();
+        double previous = Value;
+        UpdateValue(Value - Step, true);
+        if (!Value.Equals(previous))
+            OnDecremented();
     }
 
     /// <summary>
@@ -331,6 +304,17 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     private string FormatDoubleToString(double number)
     {
+        if (!String.IsNullOrWhiteSpace(Mask))
+        {
+            try
+            {
+                return number.ToString(Mask, CultureInfo.InvariantCulture);
+            }
+            catch (FormatException)
+            {
+            }
+        }
+
         if (IntegersOnly || DecimalPlaces < 1)
             return number.ToString("F0", CultureInfo.InvariantCulture);
 
@@ -345,35 +329,16 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     private bool IsNumberTextValid(string inputText)
     {
-        // If the mask is used this method will not work
-
         var decimalPlaces = DecimalPlaces;
-        var integerRegex = new Regex(_integerExpression);
-        var decimalRegex = new Regex(_decimalExpression);
 
         if (IntegersOnly || decimalPlaces < 1)
-            return integerRegex.IsMatch(inputText);
+            return IntegerExpression.IsMatch(inputText);
 
-        if (!decimalRegex.IsMatch(inputText))
+        if (!DecimalExpression.IsMatch(inputText))
             return false;
 
-        if (inputText.Contains(",") && inputText.Substring(inputText.IndexOf(",")).Length > decimalPlaces)
-            return false;
-
-        if (inputText.Contains(".") && inputText.Substring(inputText.IndexOf(".")).Length > decimalPlaces)
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
-    /// Tries to format provided string according to the mask.
-    /// </summary>
-    private string FormatWithMask(string currentInput, string newInput)
-    {
-        // TODO: Format text according to MaskProperty
-
-        return currentInput;
+        int separator = inputText.IndexOfAny(new[] { '.', ',' });
+        return separator < 0 || inputText.Length - separator - 1 <= decimalPlaces;
     }
 
     /// <summary>
@@ -381,7 +346,7 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     private double ParseStringToDouble(string inputText)
     {
-        Double.TryParse(inputText, NumberStyles.Any, CultureInfo.InvariantCulture, out double number);
+        Double.TryParse(inputText.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out double number);
 
         return number;
     }
@@ -391,7 +356,7 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     /// </summary>
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        Text = FormatDoubleToString(Value);
+        SetText(FormatDoubleToString(Value));
     }
 
     /// <inheritdoc />
@@ -419,33 +384,23 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
     {
         base.OnTextChanged(e);
 
-        var currentText = Text;
-        var parsedNumber = ParseStringToDouble(currentText);
+        if (_updatingText)
+            return;
 
+        var currentText = Text;
         PlaceholderEnabled = currentText.Length < 1;
 
-        // TODO: Meh
-        if (parsedNumber > Max)
-        {
-            UpdateValue(Max, true);
-
+        if (String.IsNullOrWhiteSpace(currentText) || currentText == "-" || currentText == "." || currentText == ",")
             return;
-        }
 
-        if (parsedNumber < Min)
-        {
-            UpdateValue(Min, true);
-
-            return;
-        }
-
-        UpdateValue(parsedNumber, true);
+        if (Double.TryParse(currentText.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedNumber))
+            UpdateValue(parsedNumber, false);
     }
 
     /// <inheritdoc />
     protected override void OnPreviewTextInput(TextCompositionEventArgs e)
     {
-        var newText = Text + (e.Text ?? String.Empty);
+        var newText = Text.Remove(SelectionStart, SelectionLength).Insert(SelectionStart, e.Text ?? String.Empty);
 
         if (!String.IsNullOrEmpty(newText))
             e.Handled = !IsNumberTextValid(newText);
@@ -456,6 +411,12 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
 
 
         base.OnPreviewTextInput(e);
+    }
+
+    protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+    {
+        base.OnLostKeyboardFocus(e);
+        SetText(FormatDoubleToString(Value));
     }
 
     /// <summary>
@@ -490,10 +451,32 @@ public class NumberBox : Wpf.Ui.Controls.TextBox
         if (sender is not NumberBox control)
             return;
 
-        var clipboardText = (string)e.DataObject.GetData(typeof(string));
-
-        if (!IsNumberTextValid(clipboardText))
+        var clipboardText = e.DataObject.GetData(typeof(string)) as string;
+        if (clipboardText == null)
+        {
             e.CancelCommand();
+            return;
+        }
+
+        string candidate = Text.Remove(SelectionStart, SelectionLength).Insert(SelectionStart, clipboardText);
+
+        if (!IsNumberTextValid(candidate) || (Min >= 0 && candidate.StartsWith("-")))
+            e.CancelCommand();
+    }
+
+    private void SetText(string value)
+    {
+        bool wasUpdatingText = _updatingText;
+        _updatingText = true;
+        try
+        {
+            Text = value;
+            CaretIndex = value.Length;
+        }
+        finally
+        {
+            _updatingText = wasUpdatingText;
+        }
     }
 
     private static void OnValuePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

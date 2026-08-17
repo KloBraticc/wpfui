@@ -261,14 +261,15 @@ public class UiWindow : System.Windows.Window
         }
 
         if (!ExtendsContentIntoTitleBar)
-            throw new InvalidOperationException($"Cannot apply backdrop effect if {nameof(ExtendsContentIntoTitleBar)} is false.");
+            return;
 
-        if (backdropType == BackgroundType.Aero && !AllowsTransparency)
-            throw new InvalidOperationException("Aero effect requires AllowsTransparency to be set to True.");
+        if (!AllowsTransparency && (backdropType == BackgroundType.Aero
+            || (backdropType == BackgroundType.Acrylic && !Win32.Utilities.IsOSWindows11Insider1OrNewer)))
+        {
+            Appearance.Background.Apply(this, BackgroundType.Mica);
 
-        if (backdropType == BackgroundType.Acrylic && !Win32.Utilities.IsOSWindows11Insider1OrNewer &&
-            !AllowsTransparency)
-            throw new InvalidOperationException("In the Windows system below 22523 build, the Acrylic effect cannot be applied if the Window does not have AllowsTransparency set to True.");
+            return;
+        }
 
         // Set backdrop effect and remove background from window and it's composition area
         Appearance.Background.Apply(this, WindowBackdropType);
@@ -285,17 +286,13 @@ public class UiWindow : System.Windows.Window
 
         UnsafeNativeMethods.RemoveWindowTitlebar(this);
 
-        // TODO: Rewrite custom window chrome
-
-        bool win11beta = Environment.OSVersion.Version.Build > 21000 && Environment.OSVersion.Version.Build < 22000;
-
         WindowChrome.SetWindowChrome(this,
             new WindowChrome
             {
                 CaptionHeight = 1,
-                CornerRadius = new CornerRadius(4),
-                GlassFrameThickness = new Thickness(win11beta ? 0 : -1),
-                ResizeBorderThickness = this.ResizeMode == ResizeMode.NoResize ? new Thickness(0) : new Thickness(4),
+                CornerRadius = OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000) ? new CornerRadius(0) : new CornerRadius(4),
+                GlassFrameThickness = new Thickness(-1),
+                ResizeBorderThickness = ResizeMode == ResizeMode.NoResize ? new Thickness(0) : SystemParameters.WindowResizeBorderThickness,
                 UseAeroCaptionButtons = false
             });
     }

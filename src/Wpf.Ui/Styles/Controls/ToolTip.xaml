@@ -47,15 +47,15 @@
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="4"
+                        CornerRadius="5"
                         SnapsToDevicePixels="True">
                         <Border.Effect>
                             <DropShadowEffect
-                                BlurRadius="30"
-                                Direction="0"
-                                Opacity="0.4"
-                                ShadowDepth="0"
-                                Color="#202020" />
+                                BlurRadius="8"
+                                Direction="270"
+                                Opacity="0.14"
+                                ShadowDepth="4"
+                                Color="#000000" />
                         </Border.Effect>
                         <ContentPresenter
                             Margin="4"

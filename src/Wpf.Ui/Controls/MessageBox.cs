@@ -191,8 +191,9 @@ public class MessageBox : System.Windows.Window
         SetWindowStartupLocation();
         Topmost = true;
 
-        Height = 200;
+        MinHeight = 200;
         Width = 400;
+        SizeToContent = SizeToContent.Height;
 
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
@@ -204,7 +205,8 @@ public class MessageBox : System.Windows.Window
     {
         UnsafeNativeMethods.RemoveWindowTitlebar(this);
 
-        Wpf.Ui.Appearance.Background.Apply(this, Wpf.Ui.Appearance.BackgroundType.Mica);
+        if (MicaEnabled)
+            Wpf.Ui.Appearance.Background.Apply(this, Wpf.Ui.Appearance.BackgroundType.Mica);
 
         base.Show();
     }
@@ -221,19 +223,6 @@ public class MessageBox : System.Windows.Window
 
         Show();
     }
-
-    // TODO: Window height match content height.
-
-    //protected override void OnContentChanged(object oldContent, object newContent)
-    //{
-    //    System.Diagnostics.Debug.WriteLine("New content");
-    //    System.Diagnostics.Debug.WriteLine(newContent.GetType());
-
-    //    if (newContent != null && newContent.GetType() == typeof(System.Windows.Controls.Grid))
-    //        Height = (newContent as System.Windows.Controls.Grid).ActualHeight;
-
-    //    base.OnContentChanged(oldContent, newContent);
-    //}
 
     private void SetWindowStartupLocation()
     {

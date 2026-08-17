@@ -48,8 +48,14 @@ public static class Theme
                 false
             );
 
-        if (themeType == ThemeType.Unknown || themeType == AppearanceData.ApplicationTheme)
+        if (themeType == ThemeType.Unknown)
             return;
+
+        if (themeType == AppearanceData.ApplicationTheme)
+        {
+            UpdateBackground(themeType, backgroundEffect, forceBackground);
+            return;
+        }
 
         var appDictionaries = new ResourceDictionaryManager(AppearanceData.LibraryNamespace);
 
@@ -186,7 +192,13 @@ public static class Theme
         if (window.IsLoaded)
             return UnsafeNativeMethods.ApplyWindowDarkMode(window);
 
-        window.Loaded += (sender, _) => UnsafeNativeMethods.ApplyWindowDarkMode(sender as Window);
+        window.Loaded += OnLoaded;
+
+        void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            window.Loaded -= OnLoaded;
+            UnsafeNativeMethods.ApplyWindowDarkMode(window);
+        }
 
         return true;
     }
@@ -202,7 +214,13 @@ public static class Theme
         if (window.IsLoaded)
             return UnsafeNativeMethods.RemoveWindowDarkMode(window);
 
-        window.Loaded += (sender, _) => UnsafeNativeMethods.RemoveWindowDarkMode(sender as Window);
+        window.Loaded += OnLoaded;
+
+        void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            window.Loaded -= OnLoaded;
+            UnsafeNativeMethods.RemoveWindowDarkMode(window);
+        }
 
         return true;
     }
@@ -242,55 +260,10 @@ public static class Theme
     private static void UpdateBackground(ThemeType themeType,
         BackgroundType backgroundEffect = BackgroundType.Unknown, bool forceBackground = false)
     {
-        // TODO: All windows
         Background.UpdateAll(themeType, backgroundEffect);
 
-        if (!AppearanceData.HasHandle(Application.Current.MainWindow))
-            Background.Apply(Application.Current.MainWindow, backgroundEffect, forceBackground);
-
-        // Do we really neeed this?
-        //if (!Win32.Utilities.IsOSWindows11OrNewer)
-        //{
-        //    var mainWindow = Application.Current.MainWindow;
-
-        //    if (mainWindow == null)
-        //        return;
-
-        //    var backgroundColor = Application.Current.Resources["ApplicationBackgroundColor"];
-        //    if (backgroundColor is Color color)
-        //        mainWindow.Background = new SolidColorBrush(color);
-        //}
-
-
-        //        var mainWindow = Application.Current.MainWindow;
-
-        //        if (mainWindow == null)
-        //            return;
-
-        //        // TODO: Do not refresh window presenter background if already applied
-        //        var backgroundColor = Application.Current.Resources["ApplicationBackgroundColor"];
-        //        if (backgroundColor is Color color)
-        //            mainWindow.Background = new SolidColorBrush(color);
-
-        //#if DEBUG
-        //        System.Diagnostics.Debug.WriteLine($"INFO | Current background color: {backgroundColor}", "Wpf.Ui.Theme");
-        //#endif
-
-        //        var windowHandle = new WindowInteropHelper(mainWindow).Handle;
-
-        //        if (windowHandle == IntPtr.Zero)
-        //            return;
-
-        //        Background.Remove(windowHandle);
-
-        //        //if (!IsAppMatchesSystem() || backgroundEffect == BackgroundType.Unknown)
-        //        //    return;
-
-        //        if (backgroundEffect == BackgroundType.Unknown)
-        //            return;
-
-        //        // TODO: Improve
-        //        if (Background.Apply(windowHandle, backgroundEffect, forceBackground))
-        //            mainWindow.Background = Brushes.Transparent;
+        var mainWindow = Application.Current?.MainWindow;
+        if (mainWindow != null && !AppearanceData.HasHandle(mainWindow))
+            Background.Apply(mainWindow, backgroundEffect, forceBackground);
     }
 }

@@ -10,6 +10,8 @@ namespace Wpf.Ui.Services.Internal;
 /// </summary>
 internal struct NavigationServiceExtraData
 {
+    public long ActionIdentifier { get; set; }
+
     /// <summary>
     /// Current page id.
     /// </summary>

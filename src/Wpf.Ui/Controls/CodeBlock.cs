@@ -56,7 +56,19 @@ public class CodeBlock : System.Windows.Controls.ContentControl
     {
         SetValue(ButtonCommandProperty, new Common.RelayCommand(o => Button_Click(this, o)));
 
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        Appearance.Theme.Changed -= ThemeOnChanged;
         Appearance.Theme.Changed += ThemeOnChanged;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        Appearance.Theme.Changed -= ThemeOnChanged;
     }
 
     private void ThemeOnChanged(ThemeType currentTheme, Color systemAccent)

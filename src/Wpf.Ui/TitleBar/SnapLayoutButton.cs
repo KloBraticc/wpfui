@@ -14,7 +14,7 @@ namespace Wpf.Ui.TitleBar;
 /// <summary>
 /// Represents a snap layout button.
 /// </summary>
-internal class SnapLayoutButton
+internal class SnapLayoutButton : IDisposable
 {
     /// <summary>
     /// Visual controls of the button.
@@ -30,6 +30,7 @@ internal class SnapLayoutButton
     /// Rendered size of the button control.
     /// </summary>
     private Size _renderedSize;
+    private readonly double _initialDpiScale;
 
     /// <summary>
     /// Whether the button is clicked.
@@ -48,17 +49,22 @@ internal class SnapLayoutButton
     {
         _visual = button ?? throw new InvalidOperationException($"Parameter button of the {typeof(SnapLayoutButton)} cannot be null.");
 
-        // TODO: If application is DPI aware, the scale can vary depends on the screen
-        // Should also react to DPI change and adjust the Size
+        _initialDpiScale = dpiScale;
 
         if (button.IsLoaded)
             UpdateScale(dpiScale);
         else
-            button.Loaded += (_, _) => UpdateScale(dpiScale);
+            button.Loaded += OnVisualLoaded;
 
         Type = type;
         IsHovered = false;
         IsClickedDown = false;
+    }
+
+    private void OnVisualLoaded(object sender, RoutedEventArgs e)
+    {
+        _visual.Loaded -= OnVisualLoaded;
+        UpdateScale(_initialDpiScale);
     }
 
     public void UpdateScale(double dpiScale)
@@ -163,5 +169,11 @@ internal class SnapLayoutButton
 
         // Whether the cursor is inside the button area
         return rect.Contains(new Point(positionX, positionY));
+    }
+
+    public void Dispose()
+    {
+        _visual.Loaded -= OnVisualLoaded;
+        GC.SuppressFinalize(this);
     }
 }

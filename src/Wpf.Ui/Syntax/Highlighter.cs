@@ -13,8 +13,6 @@ using Wpf.Ui.Appearance;
 
 namespace Wpf.Ui.Syntax;
 
-// TODO: This class is work in progress.
-
 /// <summary>
 /// Formats a string of code into <see cref="System.Windows.Controls.TextBox"/> control.
 /// <para>Implementation and regex patterns inspired by <see href="https://github.com/antoniandre/simple-syntax-highlighter"/>.</para>
@@ -174,9 +172,10 @@ internal static class Highlighter
     {
         var pattern = String.Empty;
 
-        // TODO: Auto detected
         if (language == SyntaxLanguage.Autodetect)
-            language = SyntaxLanguage.XAML;
+            language = code.TrimStart().StartsWith("<", StringComparison.Ordinal)
+                ? SyntaxLanguage.XAML
+                : SyntaxLanguage.CSHARP;
 
         switch (language)
         {

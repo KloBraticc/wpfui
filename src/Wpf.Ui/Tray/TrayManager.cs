@@ -5,34 +5,18 @@
 // and WPF UI Contributors. All Rights Reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Interop;
 
 namespace Wpf.Ui.Tray
 {
-    /*
-     * TODO: Handle closing of the parent window.
-     * 
-     * ISSUE:
-     * If the main window is closed via Debugger or forcibly destroyed, 
-     * it may not send WM_CLOSE or WM_DESTROY messages to child windows.
-     * As a result, the tray icon may persist after the application exits.
-     *
-     * SUGGESTED FIX:
-     * Implement a detection mechanism in TrayHandler to monitor whether
-     * the parent window still exists. If the parent is gone, explicitly call:
-     * 
-     *   Shell32.Shell_NotifyIcon(Shell32.NIM.DELETE, Shell32.NOTIFYICONDATA)
-     *
-     * Similarly, detect unexpected TrayHandler disposal and remove icons
-     * to prevent orphaned tray icons.
-     */
-
     /// <summary>
     /// Manages system tray icons for WPF applications.
     /// </summary>
     internal static class TrayManager
     {
+        private static readonly Dictionary<INotifyIcon, HwndSource> ParentSources = new();
         /// <summary>
         /// Registers a tray icon using the application's main window as parent.
         /// </summary>
@@ -113,10 +97,19 @@ namespace Wpf.Ui.Tray
             // Add window hook
             notifyIcon.HookWindow.AddHook(notifyIcon.WndProc);
 
-            // Add to system tray
-            Interop.Shell32.Shell_NotifyIcon(Interop.Shell32.NIM.ADD, notifyIcon.ShellIconData);
+            if (!Interop.Shell32.Shell_NotifyIcon(Interop.Shell32.NIM.ADD, notifyIcon.ShellIconData))
+            {
+                notifyIcon.HookWindow.RemoveHook(notifyIcon.WndProc);
+                notifyIcon.HookWindow.Dispose();
+                notifyIcon.HookWindow = null;
+                Hicon.Destroy(notifyIcon.ShellIconData.hIcon);
+                notifyIcon.ShellIconData.hIcon = IntPtr.Zero;
+                return false;
+            }
 
             TrayData.NotifyIcons.Add(notifyIcon);
+            ParentSources[notifyIcon] = parentSource;
+            parentSource.Disposed += OnParentSourceDisposed;
             notifyIcon.IsRegistered = true;
 
             return true;
@@ -136,12 +129,28 @@ namespace Wpf.Ui.Tray
             Interop.Shell32.Shell_NotifyIcon(Interop.Shell32.NIM.DELETE, notifyIcon.ShellIconData);
 
             notifyIcon.IsRegistered = false;
+            if (ParentSources.Remove(notifyIcon, out HwndSource? parentSource))
+                parentSource.Disposed -= OnParentSourceDisposed;
+            notifyIcon.HookWindow?.RemoveHook(notifyIcon.WndProc);
             notifyIcon.HookWindow?.Dispose();
             notifyIcon.HookWindow = null;
+            Hicon.Destroy(notifyIcon.ShellIconData.hIcon);
+            notifyIcon.ShellIconData.hIcon = IntPtr.Zero;
 
             TrayData.NotifyIcons.Remove(notifyIcon);
 
             return true;
+        }
+
+        private static void OnParentSourceDisposed(object? sender, EventArgs e)
+        {
+            if (sender is not HwndSource source)
+                return;
+            foreach (var pair in new List<KeyValuePair<INotifyIcon, HwndSource>>(ParentSources))
+            {
+                if (ReferenceEquals(pair.Value, source))
+                    Unregister(pair.Key);
+            }
         }
 
         /// <summary>

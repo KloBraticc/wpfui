@@ -110,7 +110,7 @@ public class DynamicScrollBar : System.Windows.Controls.Primitives.ScrollBar
             return;
 
         if (!shouldBeInteracted)
-            await Task.Delay(Timeout);
+            await Task.Delay(System.Math.Max(0, Timeout));
 
         if (!_interactionTracker.IsEqual(interactionEvent))
             return;

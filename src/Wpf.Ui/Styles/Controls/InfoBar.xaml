@@ -55,6 +55,7 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
                                 <controls:SymbolIcon x:Name="SymbolIcon"
@@ -70,15 +71,21 @@
                                                   TextElement.FontSize="{TemplateBinding FontSize}"
                                                   TextElement.FontWeight="Bold" />
 
-                                <ContentPresenter Grid.Column="2"
-                                                  Margin="0"
-                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                  Content="{TemplateBinding Message}"
-                                                  ScrollViewer.CanContentScroll="False"
-                                                  TextElement.FontSize="{TemplateBinding FontSize}" />
+                                <TextBlock Grid.Column="2"
+                                           Margin="0"
+                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                           Text="{TemplateBinding Message}"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           TextWrapping="Wrap" />
+
+                                <ContentPresenter x:Name="ActionContent"
+                                                  Grid.Column="3"
+                                                  Margin="10,0,0,0"
+                                                  VerticalAlignment="Center"
+                                                  Content="{TemplateBinding Content}" />
 
                                 <controls:Button x:Name="CloseButton"
-                                                 Grid.Column="3"
+                                                 Grid.Column="4"
                                                  Background="Transparent"
                                                  BorderThickness="0"
                                                  Command="{Binding Path=TemplateButtonCommand, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
@@ -89,6 +96,10 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsClosable" Value="False">
                             <Setter TargetName="CloseButton" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="Content" Value="{x:Null}">
+                            <Setter TargetName="ActionContent" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="ActionContent" Property="Margin" Value="0" />
                         </Trigger>
 
                         <Trigger Property="IsOpen" Value="True">

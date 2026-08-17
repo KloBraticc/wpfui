@@ -1,4 +1,4 @@
-﻿<!--
+<!--
     This Source Code Form is subject to the terms of the MIT License.
     If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
     Copyright (C) Leszek Pomianowski and WPF UI Contributors.
@@ -36,6 +36,7 @@
         <Setter Property="MinHeight" Value="68" />
         <Setter Property="Focusable" Value="False" />
         <Setter Property="KeyboardNavigation.IsTabStop" Value="False" />
+        <Setter Property="IsHitTestVisible" Value="False" />
         <Setter Property="VerticalAlignment" Value="Bottom" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -43,29 +44,36 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:Snackbar}">
-                    <Grid
-                        x:Name="CardBorderContainer"
-                        Margin="0,0,0,-200"
-                        Opacity="0">
-                        <Border
-                            x:Name="CardBorder"
-                            MinHeight="{TemplateBinding MinHeight}"
-                            Padding="12"
-                            VerticalAlignment="Bottom"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            RenderTransform="{TemplateBinding SlideTransform}"
-                            Visibility="{TemplateBinding Visibility}">
-                            <Border.Effect>
-                                <DropShadowEffect
-                                    BlurRadius="30"
-                                    Direction="0"
-                                    Opacity="0.4"
-                                    ShadowDepth="0"
-                                    Color="#202020" />
-                            </Border.Effect>
+                    <Grid x:Name="CardBorderContainer" Opacity="0">
+                        <Grid x:Name="CardSlide" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <TranslateTransform x:Name="CardSlideTransform" Y="48" />
+                            </Grid.RenderTransform>
+                            <Border
+                                x:Name="CardShadow"
+                                MinHeight="{TemplateBinding MinHeight}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                                <Border.Effect>
+                                    <DropShadowEffect
+                                        BlurRadius="30"
+                                        Direction="0"
+                                        Opacity="0.4"
+                                        ShadowDepth="0"
+                                        Color="#202020" />
+                                </Border.Effect>
+                            </Border>
+                            <Border
+                                x:Name="CardBorder"
+                                MinHeight="{TemplateBinding MinHeight}"
+                                Padding="12"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                RenderOptions.ClearTypeHint="Enabled"
+                                UseLayoutRounding="True"
+                                Visibility="{TemplateBinding Visibility}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -115,7 +123,8 @@
                                     <controls:SymbolIcon Foreground="{TemplateBinding Foreground}" Symbol="Dismiss48" />
                                 </controls:Button>
                             </Grid>
-                        </Border>
+                            </Border>
+                        </Grid>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="Icon" Value="Empty">
@@ -128,41 +137,54 @@
                         <Trigger Property="IsShown" Value="True">
                             <Setter Property="Focusable" Value="True" />
                             <Setter Property="KeyboardNavigation.IsTabStop" Value="True" />
+                            <Setter Property="IsHitTestVisible" Value="True" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ThicknessAnimationUsingKeyFrames
-                                            BeginTime="00:00:00"
-                                            Storyboard.TargetName="CardBorderContainer"
-                                            Storyboard.TargetProperty="Margin">
-                                            <SplineThicknessKeyFrame KeyTime="00:00:00" Value="0,0,0,-200" />
-                                            <SplineThicknessKeyFrame KeyTime="00:00:.26" Value="0,0,0,0" />
-                                        </ThicknessAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="CardSlideTransform"
+                                            Storyboard.TargetProperty="Y"
+                                            From="48"
+                                            To="0"
+                                            Duration="0:0:0.18">
+                                            <DoubleAnimation.EasingFunction>
+                                                <controls:CubicBezierEase X1="0.4" Y1="0" X2="0.2" Y2="1" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                         <DoubleAnimation
                                             Storyboard.TargetName="CardBorderContainer"
-                                            Storyboard.TargetProperty="(Grid.Opacity)"
+                                            Storyboard.TargetProperty="(UIElement.Opacity)"
                                             From="0"
                                             To="1"
-                                            Duration="0:0:.26" />
+                                            Duration="0:0:0.18">
+                                            <DoubleAnimation.EasingFunction>
+                                                <controls:CubicBezierEase X1="0.4" Y1="0" X2="0.2" Y2="1" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ThicknessAnimationUsingKeyFrames
-                                            BeginTime="00:00:00"
-                                            Storyboard.TargetName="CardBorderContainer"
-                                            Storyboard.TargetProperty="Margin">
-                                            <SplineThicknessKeyFrame KeyTime="00:00:00" Value="0,0,0,0" />
-                                            <SplineThicknessKeyFrame KeyTime="00:00:.32" Value="0,0,0,-200" />
-                                        </ThicknessAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="CardSlideTransform"
+                                            Storyboard.TargetProperty="Y"
+                                            To="48"
+                                            Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <controls:CubicBezierEase X1="0.7" Y1="0" X2="1" Y2="0.5" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                         <DoubleAnimation
                                             Storyboard.TargetName="CardBorderContainer"
-                                            Storyboard.TargetProperty="(Grid.Opacity)"
-                                            From="1"
+                                            Storyboard.TargetProperty="(UIElement.Opacity)"
                                             To="0"
-                                            Duration="0:0:.32" />
+                                            Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <controls:CubicBezierEase X1="0.7" Y1="0" X2="1" Y2="0.5" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>

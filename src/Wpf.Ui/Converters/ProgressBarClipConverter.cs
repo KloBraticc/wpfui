@@ -30,7 +30,7 @@ namespace Wpf.Ui.Converters
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            return targetTypes.Select(_ => Binding.DoNothing).ToArray();
         }
     }
 }

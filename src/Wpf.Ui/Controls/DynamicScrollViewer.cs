@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace Wpf.Ui.Controls
 {
@@ -12,11 +11,36 @@ namespace Wpf.Ui.Controls
     [ToolboxBitmap(typeof(DynamicScrollViewer), "DynamicScrollViewer.bmp")]
     public class DynamicScrollViewer : ScrollViewer
     {
-        private CancellationTokenSource? _verticalCts;
-        private CancellationTokenSource? _horizontalCts;
+        private readonly DispatcherTimer _verticalTimer = new();
+        private readonly DispatcherTimer _horizontalTimer = new();
+        private bool _verticalTimerAttached;
+        private bool _horizontalTimerAttached;
 
         private int _timeout = 900;
-        private double _minimalChange = 8d;
+        private double _minimalChange = 1d;
+
+        public DynamicScrollViewer()
+        {
+            Unloaded += OnUnloaded;
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            _verticalTimer.Stop();
+            _horizontalTimer.Stop();
+            if (_verticalTimerAttached)
+            {
+                _verticalTimer.Tick -= OnVerticalTimerTick;
+                _verticalTimerAttached = false;
+            }
+            if (_horizontalTimerAttached)
+            {
+                _horizontalTimer.Tick -= OnHorizontalTimerTick;
+                _horizontalTimerAttached = false;
+            }
+            IsScrollingVertically = false;
+            IsScrollingHorizontally = false;
+        }
 
         public static readonly DependencyProperty IsScrollingVerticallyProperty =
             DependencyProperty.Register(
@@ -37,7 +61,7 @@ namespace Wpf.Ui.Controls
                 nameof(MinimalChange),
                 typeof(double),
                 typeof(DynamicScrollViewer),
-                new PropertyMetadata(8d, OnMinimalChangeChanged));
+                new PropertyMetadata(1d, OnMinimalChangeChanged));
 
         public static readonly DependencyProperty TimeoutProperty =
             DependencyProperty.Register(
@@ -85,46 +109,42 @@ namespace Wpf.Ui.Controls
         {
             if (isVertical)
             {
-                _verticalCts?.Cancel();
-                _verticalCts = new CancellationTokenSource();
-
                 if (!IsScrollingVertically)
                     IsScrollingVertically = true;
-
-                _ = ResetScrollStateAsync(_verticalCts.Token, isVertical);
+                if (!_verticalTimerAttached)
+                {
+                    _verticalTimer.Tick += OnVerticalTimerTick;
+                    _verticalTimerAttached = true;
+                }
+                _verticalTimer.Stop();
+                _verticalTimer.Interval = TimeSpan.FromMilliseconds(_timeout);
+                _verticalTimer.Start();
             }
             else
             {
-                _horizontalCts?.Cancel();
-                _horizontalCts = new CancellationTokenSource();
-
                 if (!IsScrollingHorizontally)
                     IsScrollingHorizontally = true;
-
-                _ = ResetScrollStateAsync(_horizontalCts.Token, isVertical);
+                if (!_horizontalTimerAttached)
+                {
+                    _horizontalTimer.Tick += OnHorizontalTimerTick;
+                    _horizontalTimerAttached = true;
+                }
+                _horizontalTimer.Stop();
+                _horizontalTimer.Interval = TimeSpan.FromMilliseconds(_timeout);
+                _horizontalTimer.Start();
             }
         }
 
-        private async Task ResetScrollStateAsync(CancellationToken token, bool isVertical)
+        private void OnVerticalTimerTick(object? sender, EventArgs e)
         {
-            try
-            {
-                // Grace period: feels smoother than hard cutoff
-                await Task.Delay(_timeout, token);
-                await Task.Delay(120, token);
+			_verticalTimer.Stop();
+			IsScrollingVertically = false;
+        }
 
-                if (token.IsCancellationRequested)
-                    return;
-
-                if (isVertical)
-                    IsScrollingVertically = false;
-                else
-                    IsScrollingHorizontally = false;
-            }
-            catch (TaskCanceledException)
-            {
-                // Expected during continuous scrolling
-            }
+        private void OnHorizontalTimerTick(object? sender, EventArgs e)
+        {
+			_horizontalTimer.Stop();
+			IsScrollingHorizontally = false;
         }
 
         private static void OnMinimalChangeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

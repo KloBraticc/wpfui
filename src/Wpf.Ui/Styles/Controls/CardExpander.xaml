@@ -1,4 +1,4 @@
-﻿<!--
+<!--
     This Source Code Form is subject to the terms of the MIT License.
     If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
     Copyright (C) Leszek Pomianowski and WPF UI Contributors.
@@ -60,7 +60,11 @@
                                 Storyboard.TargetName="ChevronGrid"
                                 Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
                                 To="180"
-                                Duration="00:00:00.167" />
+                                Duration="00:00:00.300">
+                                <DoubleAnimation.EasingFunction>
+                                    <controls:CubicBezierEase X1="0.4" Y1="0" X2="0.2" Y2="1" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
                         </Storyboard>
                     </BeginStoryboard>
                 </Trigger.EnterActions>
@@ -71,7 +75,11 @@
                                 Storyboard.TargetName="ChevronGrid"
                                 Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
                                 To="0"
-                                Duration="00:00:00.167" />
+                                Duration="00:00:00.300">
+                                <DoubleAnimation.EasingFunction>
+                                    <controls:CubicBezierEase X1="0.4" Y1="0" X2="0.2" Y2="1" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
                         </Storyboard>
                     </BeginStoryboard>
                 </Trigger.ExitActions>
@@ -178,60 +186,23 @@
                             <Border
                                 x:Name="ContentPresenterBorder"
                                 Grid.Row="1"
-                                Background="Transparent"
+                                Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                Opacity="0.0">
+                                Height="0"
+                                Opacity="0.0"
+                                controls:ExpanderReveal.IsOpen="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}">
                                 <ContentPresenter
                                     x:Name="ContentPresenter"
                                     Margin="{TemplateBinding Padding}"
                                     HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                     VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                     Content="{TemplateBinding Content}" />
-                                <Border.LayoutTransform>
-                                    <ScaleTransform ScaleY="0" />
-                                </Border.LayoutTransform>
                             </Border>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsExpanded" Value="True">
                             <Setter TargetName="ContentPresenterBorder" Property="BorderThickness" Value="0,1,0,0" />
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ContentPresenterBorder"
-                                            Storyboard.TargetProperty="(Border.LayoutTransform).(ScaleTransform.ScaleY)"
-                                            From="0.0"
-                                            To="1.0"
-                                            Duration="00:00:00.167" />
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ContentPresenterBorder"
-                                            Storyboard.TargetProperty="(Border.Opacity)"
-                                            From="0.0"
-                                            To="1.0"
-                                            Duration="00:00:00.167" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ContentPresenterBorder"
-                                            Storyboard.TargetProperty="(Border.LayoutTransform).(ScaleTransform.ScaleY)"
-                                            From="1.0"
-                                            To="0"
-                                            Duration="00:00:00.167" />
-                                        <DoubleAnimation
-                                            Storyboard.TargetName="ContentPresenterBorder"
-                                            Storyboard.TargetProperty="(Border.Opacity)"
-                                            From="1.0"
-                                            To="0.0"
-                                            Duration="00:00:00.167" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />

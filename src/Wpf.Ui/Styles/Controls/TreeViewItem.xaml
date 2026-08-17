@@ -42,7 +42,7 @@
                                             Storyboard.TargetName="ChevronContainer"
                                             Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
                                             To="90"
-                                            Duration="0:0:0.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -53,7 +53,7 @@
                                             Storyboard.TargetName="ChevronContainer"
                                             Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
                                             To="0"
-                                            Duration="0:0:0.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -142,7 +142,7 @@
                             <!--
                             <VisualStateGroup Name="CommonStates">
                                 <VisualStateGroup.Transitions>
-                                    <VisualTransition GeneratedDuration="0:0:0.16" />
+                                    <VisualTransition GeneratedDuration="0:0:0.175" />
                                 </VisualStateGroup.Transitions>
                                 <VisualState Name="Normal" />
                                 <VisualState Name="MouseOver">
@@ -151,7 +151,7 @@
                                             Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="0.5"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState Name="Pressed" />
@@ -165,7 +165,7 @@
                                             Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="1.0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Unselected" />
@@ -175,7 +175,7 @@
                                             Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="1.0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>
@@ -296,7 +296,7 @@
                             <!--
                             <VisualStateGroup Name="CommonStates">
                                 <VisualStateGroup.Transitions>
-                                    <VisualTransition GeneratedDuration="0:0:0.16" />
+                                    <VisualTransition GeneratedDuration="0:0:0.175" />
                                 </VisualStateGroup.Transitions>
                                 <VisualState Name="Normal" />
                                 <VisualState Name="MouseOver">
@@ -305,7 +305,7 @@
                                             Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="0.5"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState Name="Pressed" />
@@ -319,7 +319,7 @@
                                             Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="1.0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Unselected" />
@@ -329,7 +329,7 @@
                                             Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Opacity)"
                                             From="0.0"
                                             To="1.0"
-                                            Duration="0:0:.16" />
+                                            Duration="0:0:0.175" />
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>

@@ -10,8 +10,6 @@ using Wpf.Ui.Controls.Interfaces;
 using Brush = System.Windows.Media.Brush;
 using SystemColors = System.Windows.SystemColors;
 
-// TODO: Fix clear button
-
 namespace Wpf.Ui.Controls;
 
 /// <summary>
@@ -233,7 +231,11 @@ public class TextBox : System.Windows.Controls.TextBox, IIconControl
         {
             case "clear":
                 if (Text.Length > 0)
-                    Text = String.Empty;
+                {
+                    Clear();
+                    ShowClearButton = false;
+                    Focus();
+                }
 
                 break;
         }

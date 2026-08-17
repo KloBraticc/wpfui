@@ -27,10 +27,7 @@ namespace Wpf.Ui.Hardware
 
         public static void MinimizeMemoryFootprint()
         {
-            DisableAllAnimations();
-            OptimizeVisualRendering(disableTransparency: true, forceSoftwareRendering: true);
             FreeMemory();
-            LowerProcessPriority();
             TrimWorkingSet();
         }
 
@@ -38,9 +35,7 @@ namespace Wpf.Ui.Hardware
         {
             try
             {
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
-                GC.WaitForPendingFinalizers();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: false);
 
                 TrimWorkingSet();
                 NativeMethods.FlushProcessWriteBuffers();
@@ -59,16 +54,7 @@ namespace Wpf.Ui.Hardware
             {
                 Timeline.DesiredFrameRateProperty.OverrideMetadata(
                     typeof(Timeline),
-                    new FrameworkPropertyMetadata(3));
-
-                SystemParameters.StaticPropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(SystemParameters.ClientAreaAnimation))
-                    {
-                        typeof(SystemParameters).GetProperty(nameof(SystemParameters.ClientAreaAnimation))?
-                            .SetValue(null, false);
-                    }
-                };
+                    new FrameworkPropertyMetadata(1));
 
                 AnimationsDisabled = true;
             }
@@ -82,23 +68,10 @@ namespace Wpf.Ui.Hardware
         {
             try
             {
-                RenderOptions.ProcessRenderMode = forceSoftwareRendering
-                    ? RenderMode.SoftwareOnly
-                    : RenderMode.Default;
-
-                TextOptions.TextFormattingModeProperty.OverrideMetadata(
-                    typeof(DependencyObject),
-                    new FrameworkPropertyMetadata(TextFormattingMode.Display));
-
-                TextOptions.TextRenderingModeProperty.OverrideMetadata(
-                    typeof(DependencyObject),
-                    new FrameworkPropertyMetadata(TextRenderingMode.Aliased));
+                RenderOptions.ProcessRenderMode = forceSoftwareRendering ? RenderMode.SoftwareOnly : RenderMode.Default;
 
                 if (disableTransparency)
                     DisableTransparencyEffects();
-
-                DisableAnimationsOSLevel();
-                DisableHardwareAccelerationInWpf();
             }
             catch (Exception ex)
             {

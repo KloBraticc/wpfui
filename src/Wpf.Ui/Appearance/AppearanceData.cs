@@ -80,8 +80,7 @@ internal static class AppearanceData
     /// </summary>
     public static void RemoveHandle(IntPtr hWnd)
     {
-        if (!ModifiedBackgroundHandles.Contains(hWnd))
-            ModifiedBackgroundHandles.Remove(hWnd);
+        ModifiedBackgroundHandles.Remove(hWnd);
     }
 
     /// <summary>

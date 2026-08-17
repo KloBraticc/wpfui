@@ -12,8 +12,6 @@ using System.Windows.Media.Imaging;
 
 namespace Wpf.Ui.Tray;
 
-// TODO: This class is the only reason for using System.Drawing.Common. It is worth looking for a way to get hIcon without using it.
-
 /// <summary>
 /// Facilitates the creation of a hIcon.
 /// </summary>
@@ -32,14 +30,13 @@ internal static class Hicon
             if (String.IsNullOrEmpty(processName))
                 return IntPtr.Zero;
 
-            var appIconsExtractIcon = System.Drawing.Icon.ExtractAssociatedIcon(processName);
+            using var appIconsExtractIcon = System.Drawing.Icon.ExtractAssociatedIcon(processName);
 
             if (appIconsExtractIcon == null)
                 return IntPtr.Zero;
 
-            //appIconsExtractIcon.ToBitmap();
-
-            return appIconsExtractIcon.Handle;
+            using var bitmap = appIconsExtractIcon.ToBitmap();
+            return bitmap.GetHicon();
         }
 #if DEBUG
         catch (Exception e)
@@ -95,15 +92,23 @@ internal static class Hicon
 
         // Specifies that the format is 32 bits per pixel; 8 bits each are used for the alpha, red, green, and blue components.
         // The red, green, and blue components are premultiplied, according to the alpha component.
-        var bitmap = new Bitmap(bitmapFrame.PixelWidth, bitmapFrame.PixelHeight, stride,
-            System.Drawing.Imaging.PixelFormat.Format32bppPArgb, gcHandle.AddrOfPinnedObject());
-
-        hIcon = bitmap.GetHicon();
-
-        // Release handle.
-        gcHandle.Free();
+        try
+        {
+            using var bitmap = new Bitmap(bitmapFrame.PixelWidth, bitmapFrame.PixelHeight, stride,
+                System.Drawing.Imaging.PixelFormat.Format32bppPArgb, gcHandle.AddrOfPinnedObject());
+            hIcon = bitmap.GetHicon();
+        }
+        finally
+        {
+            gcHandle.Free();
+        }
 
         return hIcon;
     }
-}
 
+    public static void Destroy(IntPtr handle)
+    {
+        if (handle != IntPtr.Zero)
+            Interop.User32.DestroyIcon(handle);
+    }
+}

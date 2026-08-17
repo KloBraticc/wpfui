@@ -4,6 +4,7 @@
 // All Rights Reserved.
 
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -44,6 +45,9 @@ namespace Wpf.Ui.Appearance
             if (!force && !IsSupported(type))
                 return false;
 
+            if (!force && !Win32.Utilities.IsOSWindows11OrNewer)
+                return false;
+
             if (window.IsLoaded)
             {
                 var windowHandle = new WindowInteropHelper(window).Handle;
@@ -54,15 +58,18 @@ namespace Wpf.Ui.Appearance
                 return Apply(windowHandle, type, force);
             }
 
-            window.Loaded += (sender, _) =>
+            window.Loaded += OnLoaded;
+
+            void OnLoaded(object sender, RoutedEventArgs e)
             {
+                window.Loaded -= OnLoaded;
                 var windowHandle = new WindowInteropHelper(sender as Window).Handle;
                 if (windowHandle == IntPtr.Zero)
                     return;
 
                 RemoveContentBackground(sender as Window);
                 Apply(windowHandle, type, force);
-            };
+            }
 
             return true;
         }
@@ -87,6 +94,9 @@ namespace Wpf.Ui.Appearance
                 return true;
             }
 
+            if (!force && !Win32.Utilities.IsOSWindows11OrNewer)
+                return false;
+
             if (Theme.GetAppTheme() == ThemeType.Dark)
                 UnsafeNativeMethods.ApplyWindowDarkMode(handle);
             else
@@ -97,18 +107,13 @@ namespace Wpf.Ui.Appearance
 
             AppearanceData.AddHandle(handle);
 
-            // Always allow Aero effect fallback
             if (type == BackgroundType.Aero)
                 return UnsafeNativeMethods.ApplyWindowAeroEffect(handle);
 
-            // ---- MODIFIED SECTION ----
-            // First release of Windows 11
             if (!Win32.Utilities.IsOSWindows11Insider1OrNewer)
             {
-                // Windows 10 & older fallback
                 if (type == BackgroundType.Mica || type == BackgroundType.Auto)
                 {
-                    // Prefer legacy mica if implemented, else Aero glass
                     if (!UnsafeNativeMethods.ApplyWindowLegacyMicaEffect(handle))
                         return UnsafeNativeMethods.ApplyWindowAeroEffect(handle);
                     return true;
@@ -116,17 +121,14 @@ namespace Wpf.Ui.Appearance
 
                 if (type == BackgroundType.Acrylic)
                 {
-                    // Try legacy acrylic, fallback to Aero
                     if (!UnsafeNativeMethods.ApplyWindowLegacyAcrylicEffect(handle))
                         return UnsafeNativeMethods.ApplyWindowAeroEffect(handle);
                     return true;
                 }
 
-                // Force glass fallback on anything else
                 return UnsafeNativeMethods.ApplyWindowAeroEffect(handle);
             }
 
-            // Newer Windows 11 versions
             return UnsafeNativeMethods.ApplyWindowBackdrop(handle, type);
         }
 
@@ -237,25 +239,30 @@ namespace Wpf.Ui.Appearance
 
         internal static void RemoveAll()
         {
-            var handles = AppearanceData.ModifiedBackgroundHandles;
+            var handles = AppearanceData.ModifiedBackgroundHandles.ToArray();
             foreach (var singleHandle in handles)
             {
                 if (!UnsafeNativeMethods.IsValidWindow(singleHandle))
+                {
+                    AppearanceData.RemoveHandle(singleHandle);
                     continue;
+                }
 
                 Remove(singleHandle);
-                AppearanceData.RemoveHandle(singleHandle);
             }
         }
 
         internal static void UpdateAll(ThemeType themeType, BackgroundType backdropType = BackgroundType.Unknown)
         {
-            var handles = AppearanceData.ModifiedBackgroundHandles;
+            var handles = AppearanceData.ModifiedBackgroundHandles.ToArray();
 
             foreach (var singleHandle in handles)
             {
                 if (!UnsafeNativeMethods.IsValidWindow(singleHandle))
+                {
+                    AppearanceData.RemoveHandle(singleHandle);
                     continue;
+                }
 
                 if (themeType == ThemeType.Dark)
                     UnsafeNativeMethods.ApplyWindowDarkMode(singleHandle);
@@ -270,19 +277,31 @@ namespace Wpf.Ui.Appearance
                     continue;
                 }
 
-                if (backdropType == BackgroundType.Mica)
+                if (!Win32.Utilities.IsOSWindows11OrNewer)
+                {
+                    Remove(singleHandle);
+                    continue;
+                }
+
+                if (backdropType == BackgroundType.None || backdropType == BackgroundType.Unknown)
+                {
+                    Remove(singleHandle);
+                }
+                else if (backdropType == BackgroundType.Mica || backdropType == BackgroundType.Auto || backdropType == BackgroundType.Tabbed)
                 {
                     if (!UnsafeNativeMethods.IsWindowHasLegacyMica(singleHandle))
-                        UnsafeNativeMethods.ApplyWindowLegacyMicaEffect(singleHandle);
+                    {
+                        if (!UnsafeNativeMethods.ApplyWindowLegacyMicaEffect(singleHandle))
+                            UnsafeNativeMethods.ApplyWindowAeroEffect(singleHandle);
+                    }
                 }
                 else if (backdropType == BackgroundType.Acrylic)
                 {
-                    // Just reapply legacy acrylic if possible (safe even if already applied)
-                    UnsafeNativeMethods.ApplyWindowLegacyAcrylicEffect(singleHandle);
+                    if (!UnsafeNativeMethods.ApplyWindowLegacyAcrylicEffect(singleHandle))
+                        UnsafeNativeMethods.ApplyWindowAeroEffect(singleHandle);
                 }
                 else
                 {
-                    // Always allow fallback Aero blur
                     UnsafeNativeMethods.ApplyWindowAeroEffect(singleHandle);
                 }
             }

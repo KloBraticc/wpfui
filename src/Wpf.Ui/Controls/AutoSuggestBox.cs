@@ -95,7 +95,7 @@ public class AutoSuggestBox : Wpf.Ui.Controls.TextBox
     public new bool AcceptsReturn
     {
         get => false;
-        set => throw new NotImplementedException($"{typeof(AutoSuggestBox)} does not accept returns.");
+        set { }
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ public class AutoSuggestBox : Wpf.Ui.Controls.TextBox
     public new int MaxLines
     {
         get => 1;
-        set => throw new NotImplementedException($"{typeof(AutoSuggestBox)} does not accept changes to the number of lines.");
+        set { }
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ public class AutoSuggestBox : Wpf.Ui.Controls.TextBox
     public new int MinLines
     {
         get => 1;
-        set => throw new NotImplementedException($"{typeof(AutoSuggestBox)} does not accept changes to the number of lines.");
+        set { }
     }
 
     /// <summary>
@@ -197,6 +197,8 @@ public class AutoSuggestBox : Wpf.Ui.Controls.TextBox
         if (SuggestionsPresenter == null)
             return;
 
+        SuggestionsPresenter.SelectionChanged -= OnSuggestionsPresenterSelectionChanged;
+        SuggestionsPresenter.LostFocus -= OnSuggestionsPresenterLostFocus;
         SuggestionsPresenter.SelectionChanged += OnSuggestionsPresenterSelectionChanged;
         SuggestionsPresenter.LostFocus += OnSuggestionsPresenterLostFocus;
     }
@@ -319,4 +321,3 @@ public class AutoSuggestBox : Wpf.Ui.Controls.TextBox
         autoSuggestBox.OnItemsSourceChanged(e.NewValue as IEnumerable<string>);
     }
 }
-

@@ -17,6 +17,10 @@ namespace Wpf.Ui.Interop;
 /// </summary>
 public static class UnsafeNativeMethods
 {
+    private static readonly bool IsWindowsPlatform = OperatingSystem.IsWindows();
+    private static readonly object TaskbarSync = new();
+    private static ShObjIdl.ITaskbarList4? TaskbarList;
+
     #region Window Corners
 
     /// <summary>
@@ -39,19 +43,16 @@ public static class UnsafeNativeMethods
         if (handle == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
         int pvAttribute = (int)UnsafeReflection.Cast(cornerPreference);
 
-        // TODO: Validate HRESULT
-        Dwmapi.DwmSetWindowAttribute(
+        return Dwmapi.DwmSetWindowAttribute(
             handle,
             Dwmapi.DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE,
             ref pvAttribute,
-            Marshal.SizeOf(typeof(int)));
-
-        return true;
+            Marshal.SizeOf(typeof(int))) == 0;
     }
 
     #endregion
@@ -76,7 +77,7 @@ public static class UnsafeNativeMethods
         if (handle == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
         var pvAttribute = 0x0; // Disable
@@ -85,14 +86,11 @@ public static class UnsafeNativeMethods
         if (!Win32.Utilities.IsOSWindows11Insider1OrNewer)
             dwAttribute = Dwmapi.DWMWINDOWATTRIBUTE.DMWA_USE_IMMERSIVE_DARK_MODE_OLD;
 
-        // TODO: Validate HRESULT
-        Dwmapi.DwmSetWindowAttribute(
+        return Dwmapi.DwmSetWindowAttribute(
             handle,
             dwAttribute,
             ref pvAttribute,
-            Marshal.SizeOf(typeof(int)));
-
-        return true;
+            Marshal.SizeOf(typeof(int))) == 0;
     }
 
     /// <summary>
@@ -113,7 +111,7 @@ public static class UnsafeNativeMethods
         if (handle == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
         var pvAttribute = 0x1; // Enable
@@ -122,14 +120,11 @@ public static class UnsafeNativeMethods
         if (!Win32.Utilities.IsOSWindows11Insider1OrNewer)
             dwAttribute = Dwmapi.DWMWINDOWATTRIBUTE.DMWA_USE_IMMERSIVE_DARK_MODE_OLD;
 
-        // TODO: Validate HRESULT
-        Dwmapi.DwmSetWindowAttribute(
+        return Dwmapi.DwmSetWindowAttribute(
             handle,
             dwAttribute,
             ref pvAttribute,
-            Marshal.SizeOf(typeof(int)));
-
-        return true;
+            Marshal.SizeOf(typeof(int))) == 0;
     }
 
     #endregion
@@ -149,11 +144,14 @@ public static class UnsafeNativeMethods
         if (window.IsLoaded)
             return GetHandle(window, out IntPtr windowHandle) && RemoveWindowTitlebar(windowHandle);
 
-        window.Loaded += (sender, _) =>
+        window.Loaded += OnLoaded;
+
+        void OnLoaded(object sender, RoutedEventArgs e)
         {
-            GetHandle(sender as Window, out IntPtr windowHandle);
+            window.Loaded -= OnLoaded;
+            GetHandle(window, out IntPtr windowHandle);
             RemoveWindowTitlebar(windowHandle);
-        };
+        }
 
         return true;
     }
@@ -168,7 +166,7 @@ public static class UnsafeNativeMethods
         if (handle == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
         var windowStyleLong = User32.GetWindowLong(handle, User32.GWL.GWL_STYLE);
@@ -203,22 +201,19 @@ public static class UnsafeNativeMethods
         if (handle == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
-        var backdropPvAttribute = (int)UnsafeReflection.Cast(backgroundType);
+        var backdropPvAttribute = GetBackdropAttribute(backgroundType);
 
         if (backdropPvAttribute == (int)Dwmapi.DWMSBT.DWMSBT_DISABLE)
             return false;
 
-        // TODO: Validate HRESULT
-        Dwmapi.DwmSetWindowAttribute(
+        return Dwmapi.DwmSetWindowAttribute(
             handle,
             Dwmapi.DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE,
             ref backdropPvAttribute,
-            Marshal.SizeOf(typeof(int)));
-
-        return true;
+            Marshal.SizeOf(typeof(int))) == 0;
     }
 
     /// <summary>
@@ -239,7 +234,7 @@ public static class UnsafeNativeMethods
         if (handle == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
         var pvAttribute = 0x0; // Disable
@@ -275,7 +270,7 @@ public static class UnsafeNativeMethods
     /// <param name="backdropType">Background backdrop type.</param>
     public static bool IsWindowHasBackdrop(IntPtr handle, BackgroundType backdropType)
     {
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
         var pvAttribute = 0x0;
@@ -283,7 +278,19 @@ public static class UnsafeNativeMethods
         Dwmapi.DwmGetWindowAttribute(handle, Dwmapi.DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE, ref pvAttribute,
             Marshal.SizeOf(typeof(int)));
 
-        return pvAttribute == (int)UnsafeReflection.Cast(backdropType);
+        return pvAttribute == GetBackdropAttribute(backdropType);
+    }
+
+    private static int GetBackdropAttribute(BackgroundType type)
+    {
+        return type switch
+        {
+            BackgroundType.Auto => (int)Dwmapi.DWMSBT.DWMSBT_AUTO,
+            BackgroundType.Mica => (int)Dwmapi.DWMSBT.DWMSBT_MAINWINDOW,
+            BackgroundType.Acrylic => (int)Dwmapi.DWMSBT.DWMSBT_TRANSIENTWINDOW,
+            BackgroundType.Tabbed => (int)Dwmapi.DWMSBT.DWMSBT_TABBEDWINDOW,
+            _ => (int)Dwmapi.DWMSBT.DWMSBT_DISABLE
+        };
     }
 
     #endregion Window Backdrop Effect
@@ -303,7 +310,7 @@ public static class UnsafeNativeMethods
     /// <param name="handle">Window handle.</param>
     public static bool IsWindowHasLegacyMica(IntPtr handle)
     {
-        if (!User32.IsWindow(handle))
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
             return false;
 
         var pvAttribute = 0x0;
@@ -329,16 +336,16 @@ public static class UnsafeNativeMethods
     /// <returns><see langword="true"/> if invocation of native Windows function succeeds.</returns>
     public static bool ApplyWindowLegacyMicaEffect(IntPtr handle)
     {
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
+            return false;
+
         var backdropPvAttribute = 0x1; //Enable
 
-        // TODO: Validate HRESULT
-        Dwmapi.DwmSetWindowAttribute(
+        return Dwmapi.DwmSetWindowAttribute(
             handle,
             Dwmapi.DWMWINDOWATTRIBUTE.DWMWA_MICA_EFFECT,
             ref backdropPvAttribute,
-            Marshal.SizeOf(typeof(int)));
-
-        return true;
+            Marshal.SizeOf(typeof(int))) == 0;
     }
 
     #endregion
@@ -360,29 +367,7 @@ public static class UnsafeNativeMethods
     /// <returns><see langword="true"/> if invocation of native Windows function succeeds.</returns>
     public static bool ApplyWindowLegacyAcrylicEffect(IntPtr handle)
     {
-        var accentPolicy = new Interop.User32.ACCENT_POLICY
-        {
-            nAccentState = User32.ACCENT_STATE.ACCENT_ENABLE_ACRYLICBLURBEHIND,
-            nColor = 0x990000 & 0xFFFFFF
-        };
-
-        var accentStructSize = Marshal.SizeOf(accentPolicy);
-        var accentPtr = Marshal.AllocHGlobal(accentStructSize);
-        
-        Marshal.StructureToPtr(accentPolicy, accentPtr, false);
-
-        var data = new User32.WINCOMPATTRDATA
-        {
-            Attribute = User32.WCA.WCA_ACCENT_POLICY,
-            SizeOfData = accentStructSize,
-            Data = accentPtr
-        };
-
-        User32.SetWindowCompositionAttribute(handle, ref data);
-
-        Marshal.FreeHGlobal(accentPtr);
-
-        return true;
+        return ApplyWindowAccentEffect(handle, User32.ACCENT_STATE.ACCENT_ENABLE_ACRYLICBLURBEHIND, 0x990000);
     }
 
     #endregion
@@ -404,28 +389,37 @@ public static class UnsafeNativeMethods
     /// <returns><see langword="true"/> if invocation of native Windows function succeeds.</returns>
     public static bool ApplyWindowAeroEffect(IntPtr handle)
     {
+        return ApplyWindowAccentEffect(handle, User32.ACCENT_STATE.ACCENT_ENABLE_BLURBEHIND, 0);
+    }
+
+    private static bool ApplyWindowAccentEffect(IntPtr handle, User32.ACCENT_STATE state, uint color)
+    {
+        if (!IsWindowsPlatform || !User32.IsWindow(handle))
+            return false;
+
         var accentPolicy = new Interop.User32.ACCENT_POLICY
         {
-            nAccentState = User32.ACCENT_STATE.ACCENT_ENABLE_BLURBEHIND
+            nAccentState = state,
+            nColor = color
         };
 
         var accentStructSize = Marshal.SizeOf(accentPolicy);
         var accentPtr = Marshal.AllocHGlobal(accentStructSize);
-
-        Marshal.StructureToPtr(accentPolicy, accentPtr, false);
-
-        var data = new User32.WINCOMPATTRDATA
+        try
         {
-            Attribute = User32.WCA.WCA_ACCENT_POLICY,
-            SizeOfData = accentStructSize,
-            Data = accentPtr
-        };
-
-        User32.SetWindowCompositionAttribute(handle, ref data);
-
-        Marshal.FreeHGlobal(accentPtr);
-
-        return true;
+            Marshal.StructureToPtr(accentPolicy, accentPtr, false);
+            var data = new User32.WINCOMPATTRDATA
+            {
+                Attribute = User32.WCA.WCA_ACCENT_POLICY,
+                SizeOfData = accentStructSize,
+                Data = accentPtr
+            };
+            return User32.SetWindowCompositionAttribute(handle, ref data) != 0;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(accentPtr);
+        }
     }
 
     #endregion
@@ -476,18 +470,21 @@ public static class UnsafeNativeMethods
         if (hWnd == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(hWnd))
+        if (!IsWindowsPlatform || !User32.IsWindow(hWnd))
             return false;
 
-        var taskbarList = new ShObjIdl.CTaskbarList() as ShObjIdl.ITaskbarList4;
-
-        if (taskbarList == null)
+        try
+        {
+            var taskbarList = GetTaskbarList();
+            if (taskbarList == null)
+                return false;
+            taskbarList.SetProgressState(hWnd, taskbarFlag);
+            return true;
+        }
+        catch
+        {
             return false;
-
-        taskbarList.HrInit();
-        taskbarList.SetProgressState(hWnd, taskbarFlag);
-
-        return true;
+        }
     }
 
     /// <summary>
@@ -501,26 +498,35 @@ public static class UnsafeNativeMethods
         if (hWnd == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(hWnd))
+        if (!IsWindowsPlatform || !User32.IsWindow(hWnd))
             return false;
 
-        // TODO: Get existing taskbar class
-
-        var taskbarList = new ShObjIdl.CTaskbarList() as ShObjIdl.ITaskbarList4;
-
-        if (taskbarList == null)
+        try
+        {
+            var taskbarList = GetTaskbarList();
+            if (taskbarList == null)
+                return false;
+            taskbarList.SetProgressState(hWnd, taskbarFlag);
+            if (taskbarFlag != ShObjIdl.TBPFLAG.TBPF_INDETERMINATE && taskbarFlag != ShObjIdl.TBPFLAG.TBPF_NOPROGRESS)
+                taskbarList.SetProgressValue(hWnd, Convert.ToUInt64(current), Convert.ToUInt64(total));
+            return true;
+        }
+        catch
+        {
             return false;
+        }
+    }
 
-        taskbarList.HrInit();
-        taskbarList.SetProgressState(hWnd, taskbarFlag);
-
-        if (taskbarFlag != ShObjIdl.TBPFLAG.TBPF_INDETERMINATE && taskbarFlag != ShObjIdl.TBPFLAG.TBPF_NOPROGRESS)
-            taskbarList.SetProgressValue(
-                hWnd,
-                Convert.ToUInt64(current),
-                Convert.ToUInt64(total));
-
-        return true;
+    private static ShObjIdl.ITaskbarList4? GetTaskbarList()
+    {
+        lock (TaskbarSync)
+        {
+            if (TaskbarList != null)
+                return TaskbarList;
+            TaskbarList = new ShObjIdl.CTaskbarList() as ShObjIdl.ITaskbarList4;
+            TaskbarList?.HrInit();
+            return TaskbarList;
+        }
     }
 
     #endregion
@@ -542,7 +548,7 @@ public static class UnsafeNativeMethods
         if (hWnd == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(hWnd))
+        if (!IsWindowsPlatform || !User32.IsWindow(hWnd))
             return false;
 
         var wtaOptions = new UxTheme.WTA_OPTIONS()
@@ -580,7 +586,7 @@ public static class UnsafeNativeMethods
         if (hWnd == IntPtr.Zero)
             return false;
 
-        if (!User32.IsWindow(hWnd))
+        if (!IsWindowsPlatform || !User32.IsWindow(hWnd))
             return false;
 
         // #1 Remove titlebar elements
@@ -636,6 +642,9 @@ public static class UnsafeNativeMethods
     /// <returns></returns>
     public static bool IsCompositionEnabled()
     {
+        if (!IsWindowsPlatform)
+            return false;
+
         Dwmapi.DwmIsCompositionEnabled(out var isEnabled);
 
         return isEnabled == 0x1;
@@ -646,7 +655,7 @@ public static class UnsafeNativeMethods
     /// </summary>
     public static bool IsValidWindow(IntPtr hWnd)
     {
-        return User32.IsWindow(hWnd);
+        return IsWindowsPlatform && User32.IsWindow(hWnd);
     }
 
     /// <summary>
