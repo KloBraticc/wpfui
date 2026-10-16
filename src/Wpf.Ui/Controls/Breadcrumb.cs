@@ -31,12 +31,17 @@ public class Breadcrumb : System.Windows.Controls.Control
 
     public static readonly DependencyProperty HasSubPageProperty = HasSubPagePropertyKey.DependencyProperty;
 
+    public static readonly DependencyProperty IconProperty = DependencyProperty.Register(nameof(Icon),
+        typeof(SymbolRegular), typeof(Breadcrumb), new PropertyMetadata(SymbolRegular.Empty));
+
     public static readonly DependencyProperty HeaderProperty = DependencyProperty.RegisterAttached("Header",
         typeof(string), typeof(Breadcrumb), new PropertyMetadata(null));
 
     private System.Windows.Controls.Primitives.ButtonBase? _root;
 
     private Frame? _frame;
+
+    private object? _parentContent;
 
     public string Current
     {
@@ -54,6 +59,12 @@ public class Breadcrumb : System.Windows.Controls.Control
     {
         get => (string)GetValue(SubPageProperty);
         set => SetValue(SubPageProperty, value);
+    }
+
+    public SymbolRegular Icon
+    {
+        get => (SymbolRegular)GetValue(IconProperty);
+        set => SetValue(IconProperty, value);
     }
 
     public bool HasSubPage => (bool)GetValue(HasSubPageProperty);
@@ -148,6 +159,7 @@ public class Breadcrumb : System.Windows.Controls.Control
             _frame.Navigated -= OnFrameNavigated;
 
         _frame = null;
+        _parentContent = null;
     }
 
     private void OnFrameNavigated(object sender, NavigationEventArgs e)
@@ -158,6 +170,9 @@ public class Breadcrumb : System.Windows.Controls.Control
     private void TrackContent(object? content)
     {
         BindingOperations.ClearBinding(this, SubPageProperty);
+
+        if (content is DependencyObject element && String.IsNullOrEmpty(GetHeader(element)))
+            _parentContent = content;
 
         if (content is DependencyObject page)
         {
@@ -173,14 +188,14 @@ public class Breadcrumb : System.Windows.Controls.Control
         if (!HasSubPage)
             return;
 
-        if (_frame?.CanGoBack == true)
+        if (_frame != null && _parentContent != null && !ReferenceEquals(_frame.Content, _parentContent))
         {
-            _frame.GoBack();
+            _frame.Navigate(_parentContent);
             return;
         }
 
-        if (Navigation != null)
-            Navigation.Navigate(Navigation.SelectedPageIndex);
+        if (_frame?.CanGoBack == true)
+            _frame.GoBack();
     }
 
     private static void OnSubPageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
