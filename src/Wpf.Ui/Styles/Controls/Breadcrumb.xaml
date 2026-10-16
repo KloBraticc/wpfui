@@ -28,21 +28,65 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:Breadcrumb}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <!--  Current page  -->
-                        <Grid x:Name="GridLevelFour" Grid.Column="0">
+                    <StackPanel Orientation="Horizontal">
+                        <Button
+                            x:Name="PART_Root"
+                            Padding="0"
+                            Focusable="False"
+                            IsHitTestVisible="False"
+                            Cursor="Arrow">
+                            <Button.Template>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border
+                                        x:Name="Square"
+                                        Margin="-6,0"
+                                        Padding="6,0,6,2"
+                                        Background="Transparent"
+                                        CornerRadius="4">
+                                        <ContentPresenter VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Square" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Square" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
                             <TextBlock
+                                x:Name="RootText"
                                 FontSize="{TemplateBinding FontSize}"
                                 FontWeight="Medium"
+                                Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Current}" />
-                        </Grid>
-                    </Grid>
+                        </Button>
+                        <controls:SymbolIcon
+                            x:Name="Chevron"
+                            Margin="14,4,10,0"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Symbol="ChevronRight20"
+                            Visibility="Collapsed" />
+                        <TextBlock
+                            x:Name="SubText"
+                            VerticalAlignment="Center"
+                            FontSize="{TemplateBinding FontSize}"
+                            FontWeight="Medium"
+                            Foreground="{TemplateBinding Foreground}"
+                            Text="{TemplateBinding SubPage}"
+                            Visibility="Collapsed" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="HasSubPage" Value="True">
+                            <Setter TargetName="PART_Root" Property="IsHitTestVisible" Value="True" />
+                            <Setter TargetName="RootText" Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                            <Setter TargetName="Chevron" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="SubText" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
