@@ -172,6 +172,8 @@
                                             Filled="{TemplateBinding IconFilled}"
                                             FontSize="{StaticResource CardExpanderIconSize}"
                                             Foreground="{TemplateBinding IconForeground}"
+                                            Focusable="False"
+                                            KeyboardNavigation.IsTabStop="False"
                                             Symbol="{TemplateBinding Icon}" />
                                         <ContentPresenter
                                             x:Name="HeaderContentPresenter"

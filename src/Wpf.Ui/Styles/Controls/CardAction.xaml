@@ -84,6 +84,8 @@
                                 Filled="{TemplateBinding IconFilled}"
                                 FontSize="{StaticResource CardActionIconSize}"
                                 Foreground="{TemplateBinding IconForeground}"
+                                Focusable="False"
+                                KeyboardNavigation.IsTabStop="False"
                                 Symbol="{TemplateBinding Icon}" />
                             <ContentPresenter
                                 x:Name="ContentPresenter"
