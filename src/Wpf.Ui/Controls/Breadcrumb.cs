@@ -37,6 +37,9 @@ public class Breadcrumb : System.Windows.Controls.Control
     public static readonly DependencyProperty HeaderProperty = DependencyProperty.RegisterAttached("Header",
         typeof(string), typeof(Breadcrumb), new PropertyMetadata(null));
 
+    public static readonly RoutedEvent BackRequestedEvent = EventManager.RegisterRoutedEvent("BackRequested",
+        RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Breadcrumb));
+
     private System.Windows.Controls.Primitives.ButtonBase? _root;
 
     private Frame? _frame;
@@ -72,6 +75,18 @@ public class Breadcrumb : System.Windows.Controls.Control
     public static string? GetHeader(DependencyObject element) => (string?)element.GetValue(HeaderProperty);
 
     public static void SetHeader(DependencyObject element, string? value) => element.SetValue(HeaderProperty, value);
+
+    public static void AddBackRequestedHandler(DependencyObject element, RoutedEventHandler handler)
+    {
+        if (element is UIElement target)
+            target.AddHandler(BackRequestedEvent, handler);
+    }
+
+    public static void RemoveBackRequestedHandler(DependencyObject element, RoutedEventHandler handler)
+    {
+        if (element is UIElement target)
+            target.RemoveHandler(BackRequestedEvent, handler);
+    }
 
     public Breadcrumb()
     {
@@ -171,7 +186,7 @@ public class Breadcrumb : System.Windows.Controls.Control
     {
         BindingOperations.ClearBinding(this, SubPageProperty);
 
-        if (content is DependencyObject element && String.IsNullOrEmpty(GetHeader(element)))
+        if (content is DependencyObject element && (String.IsNullOrEmpty(GetHeader(element)) || IsNavigationPage(content)))
             _parentContent = content;
 
         if (content is DependencyObject page)
@@ -183,10 +198,18 @@ public class Breadcrumb : System.Windows.Controls.Control
         SubPage = String.Empty;
     }
 
+    private bool IsNavigationPage(object content) => Navigation?.Current is INavigationItem item && item.PageType != null && item.PageType == content.GetType();
+
     private void OnRootClick(object sender, RoutedEventArgs e)
     {
         if (!HasSubPage)
             return;
+
+        if (_frame?.Content is UIElement current && ReferenceEquals(current, _parentContent))
+        {
+            current.RaiseEvent(new RoutedEventArgs(BackRequestedEvent, current));
+            return;
+        }
 
         if (_frame != null && _parentContent != null && !ReferenceEquals(_frame.Content, _parentContent))
         {
