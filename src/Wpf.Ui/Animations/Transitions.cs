@@ -35,6 +35,137 @@ namespace Wpf.Ui.Animations
                 typeof(long),
                 typeof(Transitions),
                 new PropertyMetadata(0L));
+        private static readonly DependencyProperty VisibilityTargetProperty =
+            DependencyProperty.RegisterAttached(
+                "VisibilityTarget",
+                typeof(bool?),
+                typeof(Transitions),
+                new PropertyMetadata(null));
+
+        public static bool ApplyVisibilityTransition(FrameworkElement? element, bool visible, int duration = 160)
+        {
+            if (element is null)
+            {
+                return false;
+            }
+
+            bool currentlyVisible = element.GetValue(VisibilityTargetProperty) is bool target
+                ? target
+                : element.Visibility == Visibility.Visible;
+
+            if (currentlyVisible == visible)
+            {
+                if (!visible && element.Visibility != Visibility.Collapsed && !element.HasAnimatedProperties)
+                {
+                    element.Visibility = Visibility.Collapsed;
+                }
+                else if (visible && element.Visibility != Visibility.Visible)
+                {
+                    element.Visibility = Visibility.Visible;
+                }
+
+                return false;
+            }
+
+            element.SetValue(VisibilityTargetProperty, visible);
+            long generation = NextTransitionGeneration(element);
+
+            if (AnimationState.IsLoading ||
+                HardwareAcceleration.AnimationsDisabled ||
+                RenderReady.ReducedMotion ||
+                !element.IsLoaded ||
+                !element.Dispatcher.CheckAccess() ||
+                element.Dispatcher.HasShutdownStarted ||
+                element.Dispatcher.HasShutdownFinished)
+            {
+                Reset(element);
+                element.IsHitTestVisible = visible;
+                element.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                return false;
+            }
+
+            duration = Math.Clamp(duration, 100, MaxDuration);
+
+            try
+            {
+                TranslateTransform transform = GetTransitionTransform(element);
+                if (visible)
+                {
+                    bool wasCollapsed = element.Visibility != Visibility.Visible;
+                    double fromOpacity = wasCollapsed ? 0.0 : Math.Clamp(element.Opacity, 0.0, 1.0);
+                    double fromX = wasCollapsed ? -12.0 : transform.X;
+                    if (!wasCollapsed && fromOpacity >= 0.99 && Math.Abs(fromX) < 0.5)
+                    {
+                        fromOpacity = 0.0;
+                        fromX = -12.0;
+                    }
+
+                    element.Visibility = Visibility.Visible;
+                    element.IsHitTestVisible = true;
+                    ResetAnimation(transform, TranslateTransform.XProperty, 0);
+                    ResetAnimation(transform, TranslateTransform.YProperty, 0);
+                    ResetAnimation(element, UIElement.OpacityProperty, 1);
+                    RenderReady.Hold(element, TimeSpan.FromMilliseconds(duration + 60));
+                    Animate(transform, TranslateTransform.XProperty, fromX, 0, duration, MoveEase);
+                    Animate(element, UIElement.OpacityProperty, fromOpacity, 1, duration, FadeEase);
+                    return true;
+                }
+
+                if (element.Visibility != Visibility.Visible)
+                {
+                    Reset(element);
+                    element.IsHitTestVisible = false;
+                    element.Visibility = Visibility.Collapsed;
+                    return false;
+                }
+
+                if (element.IsKeyboardFocusWithin)
+                {
+                    System.Windows.Input.Keyboard.ClearFocus();
+                }
+
+                element.IsHitTestVisible = false;
+                double closeFromOpacity = Math.Clamp(element.Opacity, 0.0, 1.0);
+                if (closeFromOpacity <= 0.01)
+                {
+                    closeFromOpacity = 1.0;
+                }
+
+                double closeFromX = transform.X;
+                const double closeToX = -12.0;
+
+                ResetAnimation(transform, TranslateTransform.XProperty, closeToX);
+                ResetAnimation(transform, TranslateTransform.YProperty, 0);
+                ResetAnimation(element, UIElement.OpacityProperty, 0);
+                RenderReady.Hold(element, TimeSpan.FromMilliseconds(duration + 60));
+                Animate(transform, TranslateTransform.XProperty, closeFromX, closeToX, duration, MoveEase);
+                Animate(element, UIElement.OpacityProperty, closeFromOpacity, 0, duration, FadeEase, () =>
+                {
+                    if (!IsCurrentTransition(element, generation))
+                    {
+                        return;
+                    }
+
+                    Reset(element);
+                    element.Visibility = Visibility.Collapsed;
+                });
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                Reset(element);
+                element.IsHitTestVisible = visible;
+                element.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                return false;
+            }
+            catch (ArgumentException)
+            {
+                Reset(element);
+                element.IsHitTestVisible = visible;
+                element.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                return false;
+            }
+        }
 
         public static bool ApplyTransition(object element, TransitionType type, int duration)
         {
@@ -187,7 +318,8 @@ namespace Wpf.Ui.Animations
             double from,
             double to,
             int durationMilliseconds,
-            IEasingFunction easingFunction)
+            IEasingFunction easingFunction,
+            Action? onCompleted = null)
         {
             DoubleAnimation animation = new(from, to, TimeSpan.FromMilliseconds(durationMilliseconds))
             {
@@ -209,6 +341,7 @@ namespace Wpf.Ui.Animations
                         (long)current.GetValue(AnimationGenerationProperty) == generation)
                     {
                         current.ApplyAnimationClock(property, null);
+                        onCompleted?.Invoke();
                     }
                 }
                 finally
