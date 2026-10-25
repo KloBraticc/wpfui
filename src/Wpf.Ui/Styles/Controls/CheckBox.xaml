@@ -23,27 +23,30 @@
     -->
 
     <converters:FallbackBrushConverter x:Key="FallbackBrushConverter" />
+    <converters:ClipConverter x:Key="CheckBoxClipConverter" />
 
     <Color x:Key="FallbackColor">#FFFF0000</Color>
 
     <Thickness x:Key="CheckBoxPadding">11,5,11,6</Thickness>
     <Thickness x:Key="CheckBoxBorderThemeThickness">1</Thickness>
     <Thickness x:Key="CheckBoxContentMargin">8,0,0,0</Thickness>
-    <system:Double x:Key="CheckBoxIconSize">14</system:Double>
-    <system:Double x:Key="CheckBoxHeight">22</system:Double>
-    <system:Double x:Key="CheckBoxWidth">22</system:Double>
+    <system:Double x:Key="CheckBoxIconSize">13</system:Double>
+    <system:Double x:Key="CheckBoxHeight">20</system:Double>
+    <system:Double x:Key="CheckBoxWidth">20</system:Double>
+    <system:TimeSpan x:Key="CheckBoxAnimationOffset">00:00:00.250</system:TimeSpan>
+    <Duration x:Key="CheckBoxAnimationDuration">00:00:00.250</Duration>
 
     <Style x:Key="DefaultCheckBoxStyle" TargetType="{x:Type CheckBox}">
         <!--  Universal WPF UI focus  -->
         <Setter Property="FocusVisualStyle" Value="{DynamicResource DefaultControlFocusVisualStyle}" />
         <!--  Universal WPF UI focus  -->
-        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource ControlAltFillColorSecondaryBrush}" />
         <Setter Property="Foreground">
             <Setter.Value>
                 <SolidColorBrush Color="{DynamicResource TextFillColorPrimary}" />
             </Setter.Value>
         </Setter>
-        <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
         <Setter Property="BorderThickness" Value="{StaticResource CheckBoxBorderThemeThickness}" />
         <Setter Property="Padding" Value="{StaticResource CheckBoxPadding}" />
         <Setter Property="Border.CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
@@ -70,30 +73,40 @@
                         <BulletDecorator.Bullet>
                             <Border
                                 x:Name="ControlBorderIconPresenter"
-                                Width="{StaticResource CheckBoxHeight}"
-                                Height="{StaticResource CheckBoxWidth}"
+                                Width="{StaticResource CheckBoxWidth}"
+                                Height="{StaticResource CheckBoxHeight}"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
                                 Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="{TemplateBinding Border.CornerRadius}">
-                                <Grid>
+                                <Border
+                                    x:Name="StrokeBorder"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding Border.CornerRadius}">
                                     <controls:SymbolIcon
                                         x:Name="ControlIcon"
-                                        Margin="0"
-                                        Padding="0"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         FontSize="{StaticResource CheckBoxIconSize}"
                                         FontWeight="Bold"
+                                        Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                                         Symbol="Checkmark48"
                                         Visibility="Collapsed">
-                                        <controls:SymbolIcon.Foreground>
-                                            <SolidColorBrush Color="{DynamicResource TextOnAccentFillColorPrimary}" />
-                                        </controls:SymbolIcon.Foreground>
+                                        <controls:SymbolIcon.Clip>
+                                            <MultiBinding Converter="{StaticResource CheckBoxClipConverter}">
+                                                <MultiBinding.Bindings>
+                                                    <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                                                    <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                                                    <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
+                                                </MultiBinding.Bindings>
+                                            </MultiBinding>
+                                        </controls:SymbolIcon.Clip>
+                                        <controls:SymbolIcon.Tag>
+                                            <system:Double>1</system:Double>
+                                        </controls:SymbolIcon.Tag>
                                     </controls:SymbolIcon>
-                                </Grid>
+                                </Border>
                             </Border>
                         </BulletDecorator.Bullet>
                         <ContentPresenter
@@ -113,53 +126,94 @@
                         <Trigger Property="IsChecked" Value="{x:Null}">
                             <Setter TargetName="ControlIcon" Property="Symbol" Value="Subtract16" />
                             <Setter TargetName="ControlIcon" Property="Visibility" Value="Visible" />
-                            <Setter TargetName="ControlBorderIconPresenter" Property="Background">
-                                <Setter.Value>
-                                    <SolidColorBrush Opacity="1.0" Color="{DynamicResource SystemAccentColorSecondary}" />
-                                </Setter.Value>
-                            </Setter>
+                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="ControlIcon" Property="Visibility" Value="Visible" />
-                            <Setter TargetName="ControlBorderIconPresenter" Property="Background">
-                                <Setter.Value>
-                                    <SolidColorBrush Opacity="1.0" Color="{DynamicResource SystemAccentColorSecondary}" />
-                                </Setter.Value>
-                            </Setter>
+                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Name="SlideIn">
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ControlIcon"
+                                            Storyboard.TargetProperty="Tag"
+                                            From="0"
+                                            To="1"
+                                            Duration="{StaticResource CheckBoxAnimationDuration}">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
                         </Trigger>
+                        <Trigger Property="Visibility" Value="Visible">
+                            <Trigger.EnterActions>
+                                <SeekStoryboard BeginStoryboardName="SlideIn" Offset="{StaticResource CheckBoxAnimationOffset}" />
+                            </Trigger.EnterActions>
+                        </Trigger>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <SeekStoryboard BeginStoryboardName="SlideIn" Offset="{StaticResource CheckBoxAnimationOffset}" />
+                        </EventTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsPressed" Value="False" />
                                 <Condition Property="IsChecked" Value="False" />
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="Background" Value="{DynamicResource ControlAltFillColorTertiaryBrush}" />
                         </MultiTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsPressed" Value="True" />
+                                <Condition Property="IsChecked" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="StrokeBorder" Property="Background" Value="{DynamicResource ControlAltFillColorQuarternaryBrush}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsPressed" Value="False" />
                                 <Condition Property="IsChecked" Value="{x:Null}" />
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="ControlBorderIconPresenter" Property="Background">
-                                <Setter.Value>
-                                    <SolidColorBrush Opacity="0.8" Color="{DynamicResource SystemAccentColorSecondary}" />
-                                </Setter.Value>
-                            </Setter>
+                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="BorderBrush" Value="{DynamicResource AccentFillColorSecondaryBrush}" />
                         </MultiTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsPressed" Value="True" />
+                                <Condition Property="IsChecked" Value="{x:Null}" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="BorderBrush" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsPressed" Value="False" />
                                 <Condition Property="IsChecked" Value="True" />
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="ControlBorderIconPresenter" Property="Background">
-                                <Setter.Value>
-                                    <SolidColorBrush Opacity="0.8" Color="{DynamicResource SystemAccentColorSecondary}" />
-                                </Setter.Value>
-                            </Setter>
+                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="BorderBrush" Value="{DynamicResource AccentFillColorSecondaryBrush}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsPressed" Value="True" />
+                                <Condition Property="IsChecked" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="BorderBrush" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
                         </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource ControlFillColorDisabledBrush}" />
-                            <Setter TargetName="ControlBorderIconPresenter" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
-                            <Setter TargetName="ControlIcon" Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}" />
+                            <Setter TargetName="ControlBorderIconPresenter" Property="Background" Value="{DynamicResource ControlAltFillColorDisabledBrush}" />
+                            <Setter TargetName="StrokeBorder" Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDisabledBrush}" />
+                            <Setter TargetName="ControlIcon" Property="Foreground" Value="{DynamicResource TextOnAccentFillColorDisabledBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -171,4 +225,3 @@
     <Style BasedOn="{StaticResource DefaultCheckBoxStyle}" TargetType="{x:Type CheckBox}" />
 
 </ResourceDictionary>
-
