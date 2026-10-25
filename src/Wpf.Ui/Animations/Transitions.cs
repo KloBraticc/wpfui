@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -13,6 +14,47 @@ namespace Wpf.Ui.Animations
 
     public static class Transitions
     {
+        public static readonly DependencyProperty HoldStillProperty = DependencyProperty.RegisterAttached("HoldStill", typeof(bool), typeof(Transitions), new PropertyMetadata(false, OnHoldStillChanged));
+
+        private static readonly List<WeakReference<FrameworkElement>> HeldElements = new();
+
+        public static bool GetHoldStill(DependencyObject element) => (bool)element.GetValue(HoldStillProperty);
+
+        public static void SetHoldStill(DependencyObject element, bool value) => element.SetValue(HoldStillProperty, value);
+
+        private static void OnHoldStillChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not FrameworkElement element || e.NewValue is not true)
+                return;
+
+            HeldElements.RemoveAll(IsDeadReference);
+            HeldElements.Add(new WeakReference<FrameworkElement>(element));
+        }
+
+        private static bool IsDeadReference(WeakReference<FrameworkElement> reference) => !reference.TryGetTarget(out _);
+
+        private static List<TranslateTransform>? CollectHeldTransforms(FrameworkElement page, double offsetX, double offsetY)
+        {
+            List<TranslateTransform>? held = null;
+
+            foreach (WeakReference<FrameworkElement> reference in HeldElements)
+            {
+                if (!reference.TryGetTarget(out FrameworkElement? element) || !GetHoldStill(element) || !element.IsDescendantOf(page))
+                    continue;
+
+                if (element.RenderTransform is not TranslateTransform transform || transform.IsFrozen)
+                {
+                    transform = new TranslateTransform();
+                    element.RenderTransform = transform;
+                }
+
+                ResetAnimation(transform, TranslateTransform.XProperty, -offsetX);
+                ResetAnimation(transform, TranslateTransform.YProperty, -offsetY);
+                (held ??= new List<TranslateTransform>()).Add(transform);
+            }
+
+            return held;
+        }
         private const int MinDuration = 250;
         private const int MaxDuration = 2000;
         private static readonly IEasingFunction FadeEase = CreateEase();
@@ -251,11 +293,27 @@ namespace Wpf.Ui.Animations
             ResetAnimation(transform, TranslateTransform.XProperty, offsetX);
             ResetAnimation(transform, TranslateTransform.YProperty, offsetY);
             ResetAnimation(element, UIElement.OpacityProperty, fade ? 0 : 1);
+            List<TranslateTransform>? held = CollectHeldTransforms(element, offsetX, offsetY);
 
             RenderReady.Run(element, () =>
             {
                 if (!IsCurrentTransition(element, generation) || transform.IsFrozen)
                     return;
+
+                if (held != null)
+                {
+                    foreach (TranslateTransform heldTransform in held)
+                    {
+                        ResetAnimation(heldTransform, TranslateTransform.XProperty, 0);
+                        ResetAnimation(heldTransform, TranslateTransform.YProperty, 0);
+
+                        if (offsetX != 0)
+                            Animate(heldTransform, TranslateTransform.XProperty, -offsetX, 0, durationMilliseconds, MoveEase);
+
+                        if (offsetY != 0)
+                            Animate(heldTransform, TranslateTransform.YProperty, -offsetY, 0, durationMilliseconds, MoveEase);
+                    }
+                }
 
                 ResetAnimation(transform, TranslateTransform.XProperty, 0);
                 ResetAnimation(transform, TranslateTransform.YProperty, 0);
