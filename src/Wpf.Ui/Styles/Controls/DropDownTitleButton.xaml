@@ -34,19 +34,26 @@
                                 FontSize="{TemplateBinding FontSize}"
                                 Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Text}" />
-                            <controls:SymbolIcon
+                            <Viewbox
                                 x:Name="Chevron"
+                                Width="{TemplateBinding ChevronSize}"
+                                Height="{TemplateBinding ChevronSize}"
                                 Margin="6,1,0,0"
                                 VerticalAlignment="Center"
-                                FontSize="{TemplateBinding ChevronSize}"
-                                Filled="{TemplateBinding ChevronFilled}"
-                                Foreground="{TemplateBinding Foreground}"
-                                RenderTransformOrigin="0.5,0.5"
-                                Symbol="ChevronDown16">
-                                <controls:SymbolIcon.RenderTransform>
+                                RenderTransformOrigin="0.5,0.5">
+                                <Viewbox.RenderTransform>
                                     <RotateTransform x:Name="ChevronRotate" Angle="0" />
-                                </controls:SymbolIcon.RenderTransform>
-                            </controls:SymbolIcon>
+                                </Viewbox.RenderTransform>
+                                <Canvas Width="24" Height="24">
+                                    <Path
+                                        Data="M6 9L12 15L18 9"
+                                        Stroke="{TemplateBinding Foreground}"
+                                        StrokeThickness="{TemplateBinding ChevronThickness}"
+                                        StrokeStartLineCap="Round"
+                                        StrokeEndLineCap="Round"
+                                        StrokeLineJoin="Round" />
+                                </Canvas>
+                            </Viewbox>
                         </StackPanel>
                     </Border>
                     <ControlTemplate.Triggers>
