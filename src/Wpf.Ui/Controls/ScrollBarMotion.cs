@@ -16,14 +16,18 @@ public static class ScrollBarMotion
     private const double RestThumbOpacity = 0.7;
     private const int SettleMilliseconds = 600;
     private const int LoadQuietMilliseconds = 300;
+    private const int LingerMilliseconds = 400;
 
     private static readonly IEasingFunction Ease = CreateEase();
-    private static readonly Duration GrowDuration = new(TimeSpan.FromMilliseconds(150));
-    private static readonly Duration ShrinkDuration = new(TimeSpan.FromMilliseconds(280));
+    private static readonly Duration GrowDuration = new(TimeSpan.FromMilliseconds(167));
+    private static readonly Duration ShrinkDuration = new(TimeSpan.FromMilliseconds(250));
+    private static readonly Duration FadeOutDuration = new(TimeSpan.FromMilliseconds(400));
 
     private sealed class MotionState
     {
         public DispatcherTimer? Timer;
+        public DispatcherTimer? LingerTimer;
+        public bool Lingering;
         public ControlTemplate? Template;
         public Track? Track;
         public Thumb? Thumb;
@@ -120,6 +124,12 @@ public static class ScrollBarMotion
             Tag = scrollBar
         };
         state.Timer.Tick += OnSettleTick;
+        state.LingerTimer = new DispatcherTimer(DispatcherPriority.Background, scrollBar.Dispatcher)
+        {
+            Interval = TimeSpan.FromMilliseconds(LingerMilliseconds),
+            Tag = scrollBar
+        };
+        state.LingerTimer.Tick += OnLingerTick;
 
         scrollBar.MouseEnter += OnPointerChanged;
         scrollBar.MouseLeave += OnPointerLeave;
@@ -143,6 +153,13 @@ public static class ScrollBarMotion
             state.Timer.Tick -= OnSettleTick;
             state.Timer = null;
         }
+        if (state.LingerTimer != null)
+        {
+            state.LingerTimer.Stop();
+            state.LingerTimer.Tick -= OnLingerTick;
+            state.LingerTimer = null;
+        }
+        state.Lingering = false;
 
         scrollBar.MouseEnter -= OnPointerChanged;
         scrollBar.MouseLeave -= OnPointerLeave;
@@ -180,6 +197,22 @@ public static class ScrollBarMotion
         MotionState state = GetState(scrollBar);
         if (!state.Dragging)
             BeginSettle(state);
+        if (state.LingerTimer != null && state.PanelOpacity > 0)
+        {
+            state.Lingering = true;
+            state.LingerTimer.Stop();
+            state.LingerTimer.Start();
+        }
+        Update(scrollBar, true);
+    }
+
+    private static void OnLingerTick(object? sender, EventArgs e)
+    {
+        if (sender is not DispatcherTimer timer || timer.Tag is not ScrollBar scrollBar)
+            return;
+
+        timer.Stop();
+        GetState(scrollBar).Lingering = false;
         Update(scrollBar, true);
     }
 
@@ -270,7 +303,13 @@ public static class ScrollBarMotion
         if (state.Track == null)
             return;
 
-        bool expanded = state.Dragging || scrollBar.IsMouseOver;
+        if (scrollBar.IsMouseOver && state.Lingering)
+        {
+            state.Lingering = false;
+            state.LingerTimer?.Stop();
+        }
+
+        bool expanded = state.Dragging || scrollBar.IsMouseOver || state.Lingering;
         bool active = expanded || state.Scrolling;
         bool autoHide = scrollBar is DynamicScrollBar;
 
@@ -322,15 +361,16 @@ public static class ScrollBarMotion
             return;
         }
 
+        Duration duration = growing ? GrowDuration : property == UIElement.OpacityProperty && target <= 0 ? FadeOutDuration : ShrinkDuration;
         element.BeginAnimation(
             property,
-            new DoubleAnimation(target, growing ? GrowDuration : ShrinkDuration) { EasingFunction = Ease },
+            new DoubleAnimation(target, duration) { EasingFunction = Ease },
             HandoffBehavior.SnapshotAndReplace);
     }
 
-    private static PowerEase CreateEase()
+    private static CubicBezierEase CreateEase()
     {
-        PowerEase ease = new() { EasingMode = EasingMode.EaseOut, Power = 3 };
+        CubicBezierEase ease = new() { X1 = 0.2, Y1 = 0, X2 = 0, Y2 = 1 };
         ease.Freeze();
         return ease;
     }
