@@ -39,6 +39,7 @@
                                 Margin="6,1,0,0"
                                 VerticalAlignment="Center"
                                 FontSize="{TemplateBinding ChevronSize}"
+                                Filled="{TemplateBinding ChevronFilled}"
                                 Foreground="{TemplateBinding Foreground}"
                                 RenderTransformOrigin="0.5,0.5"
                                 Symbol="ChevronDown16">

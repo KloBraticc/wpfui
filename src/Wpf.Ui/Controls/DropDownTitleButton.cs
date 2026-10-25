@@ -19,6 +19,9 @@ public class DropDownTitleButton : Button
     public static readonly DependencyProperty ChevronSizeProperty = DependencyProperty.Register(nameof(ChevronSize),
         typeof(double), typeof(DropDownTitleButton), new PropertyMetadata(11.0));
 
+    public static readonly DependencyProperty ChevronFilledProperty = DependencyProperty.Register(nameof(ChevronFilled),
+        typeof(bool), typeof(DropDownTitleButton), new PropertyMetadata(false));
+
     public static readonly DependencyProperty DropDownOffsetProperty = DependencyProperty.Register(nameof(DropDownOffset),
         typeof(Point), typeof(DropDownTitleButton), new PropertyMetadata(new Point(0, 4)));
 
@@ -49,6 +52,12 @@ public class DropDownTitleButton : Button
     {
         get => (double)GetValue(ChevronSizeProperty);
         set => SetValue(ChevronSizeProperty, value);
+    }
+
+    public bool ChevronFilled
+    {
+        get => (bool)GetValue(ChevronFilledProperty);
+        set => SetValue(ChevronFilledProperty, value);
     }
 
     public Point DropDownOffset
