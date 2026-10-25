@@ -83,13 +83,21 @@
                             x:Name="HoverLayer"
                             Background="{DynamicResource RinCaptionCloseBrush}"
                             Opacity="0" />
-                        <controls:SymbolIcon
+                        <ContentControl
                             x:Name="CaptionIcon"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            FontSize="{TemplateBinding FontSize}"
-                            Foreground="{TemplateBinding Foreground}"
-                            Symbol="{TemplateBinding Icon}" />
+                            Focusable="False"
+                            Foreground="{TemplateBinding Foreground}">
+                            <Path
+                                Width="10"
+                                Height="10"
+                                Data="M0,0 L10,10 M10,0 L0,10"
+                                SnapsToDevicePixels="True"
+                                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentControl}}"
+                                StrokeThickness="1"
+                                UseLayoutRounding="True" />
+                        </ContentControl>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="controls:CaptionButtonState.IsHovered" Value="True">
