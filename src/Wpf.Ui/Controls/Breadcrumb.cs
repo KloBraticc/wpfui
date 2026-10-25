@@ -110,16 +110,35 @@ public class Breadcrumb : System.Windows.Controls.Control
     protected virtual void OnNavigated(INavigation sender, RoutedNavigationEventArgs e)
     {
         AttachFrame();
+        UpdateCurrent(Navigation?.Frame?.Content);
+    }
 
-        if (Navigation?.Current is not INavigationItem item)
-            return;
+    private void UpdateCurrent(object? content)
+    {
+        INavigationItem? item = FindItemForContent(content) ?? Navigation?.Current as INavigationItem;
 
-        var pageName = item.Content as string;
-
-        if (String.IsNullOrEmpty(pageName))
+        if (item?.Content is not string pageName || String.IsNullOrEmpty(pageName))
             return;
 
         Current = pageName;
+    }
+
+    private INavigationItem? FindItemForContent(object? content)
+    {
+        if (content == null || Navigation == null)
+            return null;
+
+        Type type = content.GetType();
+
+        foreach (INavigationControl control in Navigation.Items)
+            if (control is INavigationItem item && item.PageType == type)
+                return item;
+
+        foreach (INavigationControl control in Navigation.Footer)
+            if (control is INavigationItem item && item.PageType == type)
+                return item;
+
+        return null;
     }
 
     protected virtual void OnNavigationChanged()
@@ -180,6 +199,7 @@ public class Breadcrumb : System.Windows.Controls.Control
     private void OnFrameNavigated(object sender, NavigationEventArgs e)
     {
         TrackContent(e.Content);
+        UpdateCurrent(e.Content);
     }
 
     private void TrackContent(object? content)
