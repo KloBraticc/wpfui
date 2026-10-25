@@ -969,7 +969,6 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
             return;
         bool maximized = window.WindowState == WindowState.Maximized;
         bool resizable = window.ResizeMode is ResizeMode.CanResize or ResizeMode.CanResizeWithGrip;
-        bool windows = System.OperatingSystem.IsWindows();
         System.Windows.Controls.ContextMenu menu = new System.Windows.Controls.ContextMenu();
         System.Windows.Controls.MenuItem Item(string key, Common.SymbolRegular symbol, bool enabled, Action action, string? gesture = null)
         {
@@ -986,11 +985,6 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
         }
         bool canMaximize = CanMaximize && ShowMaximize && resizable;
         Item("Restore", Common.SymbolRegular.SquareMultiple20, maximized && canMaximize, () => OnTemplateButtonClick(this, "restore"));
-        if (windows)
-        {
-            Item("Move", Common.SymbolRegular.ArrowMove20, !maximized, () => PostWindowCommand(window, 0xF010));
-            Item("Size", Common.SymbolRegular.ArrowMaximize20, !maximized && resizable, () => PostWindowCommand(window, 0xF000));
-        }
         Item("Minimize", Common.SymbolRegular.Subtract20, ShowMinimize && window.ResizeMode != ResizeMode.NoResize, () => OnTemplateButtonClick(this, "minimize"));
         Item("Maximize", Common.SymbolRegular.Square20, !maximized && canMaximize, () => OnTemplateButtonClick(this, "maximize"));
         menu.Items.Add(new System.Windows.Controls.Separator());
@@ -1002,13 +996,6 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
         menu.VerticalOffset = screenPoint.Y;
         menu.PlacementTarget = this;
         menu.IsOpen = true;
-    }
-
-    private static void PostWindowCommand(System.Windows.Window window, int command)
-    {
-        IntPtr handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
-        if (handle != IntPtr.Zero)
-            Interop.User32.PostMessageW(handle, Interop.User32.WM.SYSCOMMAND, (IntPtr)command, IntPtr.Zero);
     }
 
     private void OnTemplateButtonClick(TitleBar sender, object parameter)
