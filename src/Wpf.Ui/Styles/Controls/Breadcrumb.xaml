@@ -65,16 +65,16 @@
                             <controls:SymbolIcon
                                 x:Name="RootIcon"
                                 DockPanel.Dock="Left"
-                                Margin="0,4,6,0"
+                                Margin="0,1,10,0"
                                 VerticalAlignment="Center"
-                                FontSize="23"
+                                FontSize="18"
                                 Foreground="{TemplateBinding Foreground}"
                                 Symbol="{TemplateBinding Icon}" />
                             <TextBlock
                                 x:Name="RootText"
                                 TextTrimming="CharacterEllipsis"
                                 FontSize="{TemplateBinding FontSize}"
-                                FontWeight="Medium"
+                                FontWeight="SemiBold"
                                 Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Current}" />
                             </DockPanel>

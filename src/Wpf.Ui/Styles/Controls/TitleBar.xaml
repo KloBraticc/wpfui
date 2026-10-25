@@ -43,8 +43,7 @@
                             <Setter TargetName="CaptionIcon" Property="Visibility" Value="Collapsed" />
                         </Trigger>
                         <Trigger Property="controls:CaptionButtonState.IsHovered" Value="True">
-                            <Setter TargetName="CaptionIcon" Property="Opacity" Value="0.6063" />
-                            <Setter TargetName="CaptionContent" Property="Opacity" Value="0.6063" />
+                            <Setter TargetName="HoverLayer" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="CaptionIcon" Property="Opacity" Value="0.6063" />
