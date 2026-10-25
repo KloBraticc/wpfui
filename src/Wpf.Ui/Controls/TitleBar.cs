@@ -600,6 +600,14 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
     {
         switch (msg)
         {
+            case 0x00A5 when wParam.ToInt64() == 2:
+                handled = true;
+                ShowWindowMenu(new Point((short)(lParam.ToInt64() & 0xFFFF), (short)((lParam.ToInt64() >> 16) & 0xFFFF)), true);
+                return IntPtr.Zero;
+            case 0x0112 when (wParam.ToInt64() & 0xFFF0) == 0xF100 && lParam.ToInt64() == ' ':
+                handled = true;
+                ShowWindowMenu(PointToScreen(new Point(0, ActualHeight)), true);
+                return IntPtr.Zero;
             case 0x0005:
             case 0x001C:
             case 0x0006:
@@ -934,6 +942,73 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
     {
         _portableDragStarted = false;
         _portableDragArmed = false;
+    }
+
+    public static Func<string, string>? WindowMenuText { get; set; }
+
+    private static string MenuText(string key) => WindowMenuText?.Invoke(key) is { Length: > 0 } text ? text : key;
+
+    protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseRightButtonUp(e);
+        if (e.Handled)
+            return;
+        for (DependencyObject? node = e.OriginalSource as DependencyObject; node != null && !ReferenceEquals(node, this); node = node is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(node) : LogicalTreeHelper.GetParent(node))
+        {
+            if (node is System.Windows.Controls.Primitives.ButtonBase or System.Windows.Controls.Primitives.TextBoxBase)
+                return;
+        }
+        e.Handled = true;
+        ShowWindowMenu(PointToScreen(e.GetPosition(this)), true);
+    }
+
+    private void ShowWindowMenu(Point screenPoint, bool screenPixels)
+    {
+        System.Windows.Window? window = ParentWindow;
+        if (window == null)
+            return;
+        bool maximized = window.WindowState == WindowState.Maximized;
+        bool resizable = window.ResizeMode is ResizeMode.CanResize or ResizeMode.CanResizeWithGrip;
+        bool windows = System.OperatingSystem.IsWindows();
+        System.Windows.Controls.ContextMenu menu = new System.Windows.Controls.ContextMenu();
+        System.Windows.Controls.MenuItem Item(string key, Common.SymbolRegular symbol, bool enabled, Action action, string? gesture = null)
+        {
+            System.Windows.Controls.MenuItem item = new System.Windows.Controls.MenuItem
+            {
+                Header = MenuText(key),
+                Icon = new SymbolIcon { Symbol = symbol },
+                IsEnabled = enabled,
+                InputGestureText = gesture ?? ""
+            };
+            item.Click += (_, _) => action();
+            menu.Items.Add(item);
+            return item;
+        }
+        bool canMaximize = CanMaximize && ShowMaximize && resizable;
+        Item("Restore", Common.SymbolRegular.SquareMultiple20, maximized && canMaximize, () => OnTemplateButtonClick(this, "restore"));
+        if (windows)
+        {
+            Item("Move", Common.SymbolRegular.ArrowMove20, !maximized, () => PostWindowCommand(window, 0xF010));
+            Item("Size", Common.SymbolRegular.ArrowMaximize20, !maximized && resizable, () => PostWindowCommand(window, 0xF000));
+        }
+        Item("Minimize", Common.SymbolRegular.Subtract20, ShowMinimize && window.ResizeMode != ResizeMode.NoResize, () => OnTemplateButtonClick(this, "minimize"));
+        Item("Maximize", Common.SymbolRegular.Square20, !maximized && canMaximize, () => OnTemplateButtonClick(this, "maximize"));
+        menu.Items.Add(new System.Windows.Controls.Separator());
+        Item("Close", Common.SymbolRegular.Dismiss20, true, () => OnTemplateButtonClick(this, "close"), "Alt+F4");
+        if (screenPixels && PresentationSource.FromVisual(window) is { CompositionTarget: { } target })
+            screenPoint = target.TransformFromDevice.Transform(screenPoint);
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint;
+        menu.HorizontalOffset = screenPoint.X;
+        menu.VerticalOffset = screenPoint.Y;
+        menu.PlacementTarget = this;
+        menu.IsOpen = true;
+    }
+
+    private static void PostWindowCommand(System.Windows.Window window, int command)
+    {
+        IntPtr handle = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+        if (handle != IntPtr.Zero)
+            Interop.User32.PostMessageW(handle, Interop.User32.WM.SYSCOMMAND, (IntPtr)command, IntPtr.Zero);
     }
 
     private void OnTemplateButtonClick(TitleBar sender, object parameter)
