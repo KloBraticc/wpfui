@@ -93,6 +93,23 @@
                     VerticalOffset="1">
                     <Grid>
                         <Border
+                            x:Name="SubmenuShadow"
+                            Margin="12,0,12,18"
+                            CornerRadius="8"
+                            IsHitTestVisible="False"
+                            SnapsToDevicePixels="True">
+                            <Border.Background>
+                                <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect
+                                    BlurRadius="20"
+                                    Direction="270"
+                                    Opacity="0.25"
+                                    ShadowDepth="6" />
+                            </Border.Effect>
+                        </Border>
+                        <Border
                             x:Name="SubmenuBorder"
                             Margin="12,0,12,18"
                             Padding="0,3,0,3"
@@ -106,13 +123,6 @@
                             <ScrollViewer CanContentScroll="True" Style="{StaticResource UiMenuItemScrollViewer}">
                                 <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                             </ScrollViewer>
-                            <Border.Effect>
-                                <DropShadowEffect
-                                    BlurRadius="20"
-                                    Direction="270"
-                                    Opacity="0.25"
-                                    ShadowDepth="6" />
-                            </Border.Effect>
                         </Border>
                     </Grid>
                 </Popup>
@@ -120,7 +130,7 @@
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="controls:PortableShadows.IsPortable" Value="True">
-                <Setter TargetName="SubmenuBorder" Property="Effect" Value="{x:Null}" />
+                <Setter TargetName="SubmenuShadow" Property="Visibility" Value="Collapsed" />
                 <Setter TargetName="SubmenuBorder" Property="controls:PortableShadows.Layered" Value="True" />
             </Trigger>
             <Trigger Property="IsSuspendingPopupAnimation" Value="True">
@@ -362,6 +372,23 @@
                 VerticalOffset="-20">
                 <Grid>
                     <Border
+                        x:Name="SubmenuShadow"
+                        Margin="12,10,12,18"
+                        CornerRadius="8"
+                        IsHitTestVisible="False"
+                        SnapsToDevicePixels="True">
+                        <Border.Background>
+                            <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect
+                                BlurRadius="20"
+                                Direction="270"
+                                Opacity="0.5"
+                                ShadowDepth="6" />
+                        </Border.Effect>
+                    </Border>
+                    <Border
                         x:Name="SubmenuBorder"
                         Margin="12,10,12,18"
                         Padding="0,3,0,3"
@@ -375,20 +402,13 @@
                         <ScrollViewer CanContentScroll="True" Style="{StaticResource UiMenuItemScrollViewer}">
                             <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                         </ScrollViewer>
-                        <Border.Effect>
-                            <DropShadowEffect
-                                BlurRadius="20"
-                                Direction="270"
-                                Opacity="0.5"
-                                ShadowDepth="6" />
-                        </Border.Effect>
                     </Border>
                 </Grid>
             </Popup>
         </Grid>
         <ControlTemplate.Triggers>
             <Trigger Property="controls:PortableShadows.IsPortable" Value="True">
-                <Setter TargetName="SubmenuBorder" Property="Effect" Value="{x:Null}" />
+                <Setter TargetName="SubmenuShadow" Property="Visibility" Value="Collapsed" />
                 <Setter TargetName="SubmenuBorder" Property="controls:PortableShadows.Layered" Value="True" />
             </Trigger>
             <Trigger Property="Icon" Value="{x:Null}">
@@ -511,6 +531,23 @@
                     VerticalOffset="1">
                     <Grid>
                         <Border
+                            x:Name="SubmenuShadow"
+                            Margin="12,0,12,18"
+                            CornerRadius="8"
+                            IsHitTestVisible="False"
+                            SnapsToDevicePixels="True">
+                            <Border.Background>
+                                <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect
+                                    BlurRadius="20"
+                                    Direction="270"
+                                    Opacity="0.25"
+                                    ShadowDepth="6" />
+                            </Border.Effect>
+                        </Border>
+                        <Border
                             x:Name="SubmenuBorder"
                             Margin="12,0,12,18"
                             Padding="0,3,0,3"
@@ -524,13 +561,6 @@
                             <ScrollViewer CanContentScroll="True" Style="{StaticResource UiMenuItemScrollViewer}">
                                 <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                             </ScrollViewer>
-                            <Border.Effect>
-                                <DropShadowEffect
-                                    BlurRadius="20"
-                                    Direction="270"
-                                    Opacity="0.25"
-                                    ShadowDepth="6" />
-                            </Border.Effect>
                         </Border>
                     </Grid>
                 </Popup>
@@ -538,7 +568,7 @@
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="controls:PortableShadows.IsPortable" Value="True">
-                <Setter TargetName="SubmenuBorder" Property="Effect" Value="{x:Null}" />
+                <Setter TargetName="SubmenuShadow" Property="Visibility" Value="Collapsed" />
                 <Setter TargetName="SubmenuBorder" Property="controls:PortableShadows.Layered" Value="True" />
             </Trigger>
             <Trigger Property="IsSuspendingPopupAnimation" Value="True">
@@ -824,6 +854,23 @@
                 VerticalOffset="-20">
                 <Grid>
                     <Border
+                        x:Name="SubmenuShadow"
+                        Margin="12,10,12,18"
+                        CornerRadius="8"
+                        IsHitTestVisible="False"
+                        SnapsToDevicePixels="True">
+                        <Border.Background>
+                            <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect
+                                BlurRadius="20"
+                                Direction="270"
+                                Opacity="0.5"
+                                ShadowDepth="6" />
+                        </Border.Effect>
+                    </Border>
+                    <Border
                         x:Name="SubmenuBorder"
                         Margin="12,10,12,18"
                         Padding="0,3,0,3"
@@ -837,20 +884,13 @@
                         <ScrollViewer CanContentScroll="True" Style="{StaticResource UiMenuItemScrollViewer}">
                             <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                         </ScrollViewer>
-                        <Border.Effect>
-                            <DropShadowEffect
-                                BlurRadius="20"
-                                Direction="270"
-                                Opacity="0.5"
-                                ShadowDepth="6" />
-                        </Border.Effect>
                     </Border>
                 </Grid>
             </Popup>
         </Grid>
         <ControlTemplate.Triggers>
             <Trigger Property="controls:PortableShadows.IsPortable" Value="True">
-                <Setter TargetName="SubmenuBorder" Property="Effect" Value="{x:Null}" />
+                <Setter TargetName="SubmenuShadow" Property="Visibility" Value="Collapsed" />
                 <Setter TargetName="SubmenuBorder" Property="controls:PortableShadows.Layered" Value="True" />
             </Trigger>
             <Trigger Property="Icon" Value="{x:Null}">

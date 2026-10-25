@@ -32,25 +32,33 @@
                             </LinearGradientBrush>
                         </Grid.Background>
 
-                        <Border
+                        <Grid
                             x:Name="DialogBorder"
                             MaxWidth="{TemplateBinding DialogWidth}"
                             MaxHeight="{TemplateBinding DialogHeight}"
                             Margin="12"
-                            Padding="0"
-                            CornerRadius="{TemplateBinding Border.CornerRadius}"
                             Opacity="0">
-                            <Border.Background>
-                                <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
-                            </Border.Background>
-                            <Border.Effect>
-                                <DropShadowEffect
-                                    BlurRadius="64"
-                                    Direction="270"
-                                    Opacity="0.37"
-                                    ShadowDepth="32"
-                                    Color="#000000" />
-                            </Border.Effect>
+                            <Border
+                                CornerRadius="{TemplateBinding Border.CornerRadius}"
+                                IsHitTestVisible="False">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
+                                </Border.Background>
+                                <Border.Effect>
+                                    <DropShadowEffect
+                                        BlurRadius="64"
+                                        Direction="270"
+                                        Opacity="0.37"
+                                        ShadowDepth="32"
+                                        Color="#000000" />
+                                </Border.Effect>
+                            </Border>
+                            <Border
+                                Padding="0"
+                                CornerRadius="{TemplateBinding Border.CornerRadius}">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{DynamicResource SystemFillColorSolidNeutralBackground}" />
+                                </Border.Background>
 
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -140,7 +148,8 @@
                                     </Grid>
                                 </Border>
                             </Grid>
-                        </Border>
+                                                    </Border>
+                        </Grid>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsShown" Value="False">
