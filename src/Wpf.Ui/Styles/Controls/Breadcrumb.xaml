@@ -65,9 +65,9 @@
                             <controls:SymbolIcon
                                 x:Name="RootIcon"
                                 DockPanel.Dock="Left"
-                                Margin="0,1,10,0"
+                                Margin="0,1,8,0"
                                 VerticalAlignment="Center"
-                                FontSize="18"
+                                FontSize="16"
                                 Foreground="{TemplateBinding Foreground}"
                                 Symbol="{TemplateBinding Icon}" />
                             <TextBlock
@@ -82,9 +82,9 @@
                         <controls:SymbolIcon
                             x:Name="Chevron"
                             Grid.Column="1"
-                            Margin="14,4,10,0"
+                            Margin="12,3,8,0"
                             VerticalAlignment="Center"
-                            FontSize="16"
+                            FontSize="14"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             Symbol="ChevronRight20"
                             Visibility="Collapsed" />
