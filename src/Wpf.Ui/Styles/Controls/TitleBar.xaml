@@ -12,7 +12,7 @@
 
     <Style x:Key="UiTitlebarButton" TargetType="{x:Type controls:Button}">
         <Setter Property="Width" Value="44" />
-        <Setter Property="Height" Value="30" />
+        <Setter Property="MinHeight" Value="30" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="MouseOverBackground" Value="Transparent" />
@@ -65,7 +65,7 @@
 
     <Style x:Key="UiTitlebarCloseButton" TargetType="{x:Type controls:Button}">
         <Setter Property="Width" Value="44" />
-        <Setter Property="Height" Value="30" />
+        <Setter Property="MinHeight" Value="30" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="Icon" Value="Dismiss20" />
         <Setter Property="Background" Value="Transparent" />
@@ -186,7 +186,7 @@
                             <Grid
                                 Grid.Column="1"
                                 HorizontalAlignment="Right"
-                                VerticalAlignment="Top">
+                                VerticalAlignment="Stretch">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
