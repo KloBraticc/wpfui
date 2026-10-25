@@ -46,6 +46,8 @@ public class Breadcrumb : System.Windows.Controls.Control
 
     private object? _parentContent;
 
+    private Frame? _parentFrame;
+
     public string Current
     {
         get => (string)GetValue(CurrentProperty);
@@ -183,6 +185,12 @@ public class Breadcrumb : System.Windows.Controls.Control
         if (_frame == null)
             return;
 
+        if (!ReferenceEquals(_parentFrame, _frame))
+        {
+            _parentContent = null;
+            _parentFrame = _frame;
+        }
+
         _frame.Navigated += OnFrameNavigated;
         TrackContent(_frame.Content);
     }
@@ -193,7 +201,6 @@ public class Breadcrumb : System.Windows.Controls.Control
             _frame.Navigated -= OnFrameNavigated;
 
         _frame = null;
-        _parentContent = null;
     }
 
     private void OnFrameNavigated(object sender, NavigationEventArgs e)
