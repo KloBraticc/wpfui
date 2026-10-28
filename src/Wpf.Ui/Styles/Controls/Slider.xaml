@@ -75,8 +75,14 @@
     </Style>
 
     <ControlTemplate x:Key="UiSliderThumbTemplate" TargetType="{x:Type Thumb}">
-        <Grid>
-            <Ellipse x:Name="OuterRing" StrokeThickness="1">
+        <Grid Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Ellipse
+                x:Name="OuterRing"
+                Width="20"
+                Height="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                StrokeThickness="1">
                 <Ellipse.Fill>
                     <SolidColorBrush Color="{DynamicResource ControlSolidFillColorDefault}" />
                 </Ellipse.Fill>
@@ -86,11 +92,15 @@
             </Ellipse>
             <Ellipse
                 x:Name="InnerDot"
+                Width="12"
+                Height="12"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
                 Fill="{TemplateBinding Background}"
                 RenderTransformOrigin="0.5,0.5">
                 <Ellipse.RenderTransform>
                     <TransformGroup>
-                        <ScaleTransform x:Name="DotScale" ScaleX="0.6" ScaleY="0.6" />
+                        <ScaleTransform x:Name="DotScale" ScaleX="1" ScaleY="1" />
                         <ScaleTransform x:Name="HoverScale" ScaleX="1" ScaleY="1" />
                     </TransformGroup>
                 </Ellipse.RenderTransform>
@@ -101,12 +111,12 @@
                 <Trigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleX" To="1.15" Duration="0:0:0.08">
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleX" To="1.166667" Duration="0:0:0.08">
                                 <DoubleAnimation.EasingFunction>
                                     <QuadraticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleY" To="1.15" Duration="0:0:0.08">
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleY" To="1.166667" Duration="0:0:0.08">
                                 <DoubleAnimation.EasingFunction>
                                     <QuadraticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
@@ -127,12 +137,22 @@
                 <Trigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="0.46" Duration="0:0:0.14">
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleX" To="1.166667" Duration="0:0:0.08">
+                                <DoubleAnimation.EasingFunction>
+                                    <QuadraticEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleY" To="1.166667" Duration="0:0:0.08">
+                                <DoubleAnimation.EasingFunction>
+                                    <QuadraticEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="0.714286" Duration="0:0:0.14">
                                 <DoubleAnimation.EasingFunction>
                                     <QuarticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="0.46" Duration="0:0:0.14">
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="0.714286" Duration="0:0:0.14">
                                 <DoubleAnimation.EasingFunction>
                                     <QuarticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
@@ -143,12 +163,12 @@
                 <Trigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="0.6" Duration="0:0:0.34">
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.34">
                                 <DoubleAnimation.EasingFunction>
                                     <BackEase Amplitude="0.5" EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="0.6" Duration="0:0:0.34">
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.34">
                                 <DoubleAnimation.EasingFunction>
                                     <BackEase Amplitude="0.5" EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
@@ -161,8 +181,14 @@
     </ControlTemplate>
 
     <ControlTemplate x:Key="UiSliderBubbleThumbTemplate" TargetType="{x:Type Thumb}">
-        <Grid>
-            <Ellipse x:Name="OuterRing" StrokeThickness="1">
+        <Grid Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Ellipse
+                x:Name="OuterRing"
+                Width="20"
+                Height="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                StrokeThickness="1">
                 <Ellipse.Fill>
                     <SolidColorBrush Color="{DynamicResource ControlSolidFillColorDefault}" />
                 </Ellipse.Fill>
@@ -172,11 +198,15 @@
             </Ellipse>
             <Ellipse
                 x:Name="InnerDot"
+                Width="12"
+                Height="12"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
                 Fill="{TemplateBinding Background}"
                 RenderTransformOrigin="0.5,0.5">
                 <Ellipse.RenderTransform>
                     <TransformGroup>
-                        <ScaleTransform x:Name="DotScale" ScaleX="0.6" ScaleY="0.6" />
+                        <ScaleTransform x:Name="DotScale" ScaleX="1" ScaleY="1" />
                         <ScaleTransform x:Name="HoverScale" ScaleX="1" ScaleY="1" />
                     </TransformGroup>
                 </Ellipse.RenderTransform>
@@ -250,12 +280,12 @@
                 <Trigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleX" To="1.15" Duration="0:0:0.08">
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleX" To="1.166667" Duration="0:0:0.08">
                                 <DoubleAnimation.EasingFunction>
                                     <QuadraticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleY" To="1.15" Duration="0:0:0.08">
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleY" To="1.166667" Duration="0:0:0.08">
                                 <DoubleAnimation.EasingFunction>
                                     <QuadraticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
@@ -282,12 +312,22 @@
                                     <CubicEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="0.46" Duration="0:0:0.14">
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleX" To="1.166667" Duration="0:0:0.08">
+                                <DoubleAnimation.EasingFunction>
+                                    <QuadraticEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="HoverScale" Storyboard.TargetProperty="ScaleY" To="1.166667" Duration="0:0:0.08">
+                                <DoubleAnimation.EasingFunction>
+                                    <QuadraticEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="0.714286" Duration="0:0:0.14">
                                 <DoubleAnimation.EasingFunction>
                                     <QuarticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="0.46" Duration="0:0:0.14">
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="0.714286" Duration="0:0:0.14">
                                 <DoubleAnimation.EasingFunction>
                                     <QuarticEase EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
@@ -300,12 +340,12 @@
                         <Storyboard>
                             <DoubleAnimation Storyboard.TargetName="Bubble" Storyboard.TargetProperty="Opacity" To="0" BeginTime="0:0:0.15" Duration="0:0:0.2" />
                             <DoubleAnimation Storyboard.TargetName="BubbleShift" Storyboard.TargetProperty="Y" To="6" BeginTime="0:0:0.15" Duration="0:0:0.2" />
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="0.6" Duration="0:0:0.34">
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.34">
                                 <DoubleAnimation.EasingFunction>
                                     <BackEase Amplitude="0.5" EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
                             </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="0.6" Duration="0:0:0.34">
+                            <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.34">
                                 <DoubleAnimation.EasingFunction>
                                     <BackEase Amplitude="0.5" EasingMode="EaseOut" />
                                 </DoubleAnimation.EasingFunction>
