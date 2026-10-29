@@ -23,12 +23,6 @@ namespace Wpf.Ui.Interop;
 /// </summary>
 public static class UnsafeNativeMethods
 {
-    /// <summary>
-    /// Tries to set the corner preference of the selected window.
-    /// </summary>
-    /// <param name="handle">Selected window handle.</param>
-    /// <param name="cornerPreference">Window corner preference.</param>
-    /// <returns><see langword="true"/> if invocation of native Windows function succeeds.</returns>
     public static bool ApplyWindowCornerPreference(System.Windows.Window window, WindowCornerPreference cornerPreference)
     {
         if (window is null || !GetHandle(window, out IntPtr windowHandle))

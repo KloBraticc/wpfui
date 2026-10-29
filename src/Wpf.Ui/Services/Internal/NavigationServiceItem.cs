@@ -10,7 +10,7 @@ using Wpf.Ui.Controls.Interfaces;
 namespace Wpf.Ui.Services.Internal;
 
 /// <summary>
-/// Represents <see cref="Interfaces.INavigationItem"/> in <see cref="INavigation"/> internal methods.
+/// Represents <see cref="global::Wpf.Ui.Controls.Interfaces.INavigationItem"/> in <see cref="INavigation"/> internal methods.
 /// </summary>
 internal class NavigationServiceItem
 {

@@ -6,7 +6,7 @@
 namespace Wpf.Ui.Services.Internal;
 
 /// <summary>
-/// Additional data passed through the <see cref="System.Windows.Controls.Frame.Navigate"/> method.
+/// Additional data passed through the method <see cref="System.Windows.Controls.Frame"/>.
 /// </summary>
 internal struct NavigationServiceExtraData
 {
