@@ -5,6 +5,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <RunAnalyzers>false</RunAnalyzers>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <Version>4.3.0</Version>
