@@ -248,7 +248,12 @@ public class Snackbar : ContentControl, IAppearanceControl, IIconControl
         SetValue(TemplateButtonCommandProperty, new RelayCommand<object>(_ => Hide()));
     }
 
-    protected SnackbarPresenter Presenter { get; }
+    public Snackbar()
+        : this(null)
+    {
+    }
+
+    protected SnackbarPresenter? Presenter { get; }
 
     /// <summary>
     /// Shows the <see cref="Snackbar"/>
@@ -263,6 +268,13 @@ public class Snackbar : ContentControl, IAppearanceControl, IIconControl
     /// </summary>
     public virtual void Show(bool immediately)
     {
+        if (Presenter is null)
+        {
+            SetCurrentValue(IsShownProperty, true);
+            ScheduleTimeoutHide();
+            return;
+        }
+
         if (immediately)
         {
             _ = Presenter.ImmediatelyDisplay(this);
@@ -286,6 +298,12 @@ public class Snackbar : ContentControl, IAppearanceControl, IIconControl
     /// </summary>
     public virtual async Task ShowAsync(bool immediately)
     {
+        if (Presenter is null)
+        {
+            Show(immediately);
+            return;
+        }
+
         if (immediately)
         {
             await Presenter.ImmediatelyDisplay(this);
@@ -301,7 +319,59 @@ public class Snackbar : ContentControl, IAppearanceControl, IIconControl
     /// </summary>
     protected virtual void Hide()
     {
+        if (Presenter is null)
+        {
+            SetCurrentValue(IsShownProperty, false);
+            return;
+        }
+
         _ = Presenter.HideCurrent();
+    }
+
+    private System.Windows.Threading.DispatcherTimer? _compatHideTimer;
+
+    protected virtual void ScheduleTimeoutHide()
+    {
+        _compatHideTimer?.Stop();
+        _compatHideTimer = null;
+
+        if (Timeout <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        System.Windows.Threading.DispatcherTimer timer = new(Timeout, System.Windows.Threading.DispatcherPriority.Normal, (_, _) =>
+        {
+            SetCurrentValue(IsShownProperty, false);
+        }, Dispatcher);
+
+        _compatHideTimer = timer;
+        timer.Start();
+    }
+
+    public virtual bool Show(string title)
+    {
+        SetCurrentValue(TitleProperty, title);
+        Show();
+        return true;
+    }
+
+    public virtual bool Show(string title, string message)
+    {
+        SetCurrentValue(TitleProperty, title);
+        SetCurrentValue(ContentProperty, message);
+        Show();
+        return true;
+    }
+
+    public virtual bool Show(string title, string message, SymbolRegular icon, ControlAppearance appearance)
+    {
+        SetCurrentValue(TitleProperty, title);
+        SetCurrentValue(ContentProperty, message);
+        SetCurrentValue(IconProperty, new SymbolIcon { Symbol = icon });
+        SetCurrentValue(AppearanceProperty, appearance);
+        Show();
+        return true;
     }
 
     /// <summary>
