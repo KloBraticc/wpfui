@@ -15,6 +15,15 @@ public class CardExpander : System.Windows.Controls.Expander
 {
     /// <summary>Identifies the <see cref="Icon"/> dependency property.</summary>
 
+    public static readonly DependencyProperty IconForegroundProperty = DependencyProperty.Register(
+        nameof(IconForeground), typeof(System.Windows.Media.Brush), typeof(CardExpander), new PropertyMetadata(null));
+
+    public System.Windows.Media.Brush? IconForeground
+    {
+        get => (System.Windows.Media.Brush?)GetValue(IconForegroundProperty);
+        set => SetValue(IconForegroundProperty, value);
+    }
+
     public static readonly DependencyProperty IconFilledProperty = DependencyProperty.Register(
         nameof(IconFilled), typeof(bool), typeof(CardExpander), new PropertyMetadata(false, OnIconFilledChanged));
 
