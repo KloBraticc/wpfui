@@ -1,4 +1,4 @@
-// This Source Code Form is subject to the terms of the MIT License.
+﻿// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -69,6 +69,15 @@ public class AutoSuggestBox : ItemsControl, IIconControl
     );
 
     /// <summary>Identifies the <see cref="UpdateTextOnSelect"/> dependency property.</summary>
+    public static readonly DependencyProperty MaxDropDownHeightProperty = DependencyProperty.Register(
+        nameof(MaxDropDownHeight), typeof(double), typeof(AutoSuggestBox), new PropertyMetadata(double.NaN));
+
+    public double MaxDropDownHeight
+    {
+        get => (double)GetValue(MaxDropDownHeightProperty);
+        set => SetValue(MaxDropDownHeightProperty, value);
+    }
+
     public static readonly DependencyProperty UpdateTextOnSelectProperty = DependencyProperty.Register(
         nameof(UpdateTextOnSelect),
         typeof(bool),

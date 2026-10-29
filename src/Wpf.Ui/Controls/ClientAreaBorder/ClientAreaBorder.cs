@@ -1,4 +1,4 @@
-// This Source Code Form is subject to the terms of the MIT License.
+﻿// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -45,6 +45,46 @@ namespace Wpf.Ui.Controls;
 /// </example>
 public class ClientAreaBorder : System.Windows.Controls.Border, IThemeControl
 {
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<System.Windows.Window, ClientAreaBorder> AttachedBorders = new();
+
+    public static Func<System.Windows.Window, double>? PortableCornerRadiusProvider { get; set; }
+
+    public static void Refresh(System.Windows.Window? window)
+    {
+        if (window is not null && AttachedBorders.TryGetValue(window, out ClientAreaBorder? border))
+        {
+            border.ApplyPortableCornerRadius();
+        }
+    }
+
+    private void ApplyPortableCornerRadius()
+    {
+        double radius = 0;
+
+        if (_oldWindow is { } window && PortableCornerRadiusProvider is { } provider)
+        {
+            try
+            {
+                radius = provider(window);
+            }
+            catch (Exception)
+            {
+                radius = 0;
+            }
+        }
+
+        if (double.IsNaN(radius) || double.IsInfinity(radius) || radius < 0)
+        {
+            radius = 0;
+        }
+
+        if (CornerRadius.TopLeft != radius || CornerRadius.BottomRight != radius)
+        {
+            CornerRadius = new CornerRadius(radius);
+        }
+    }
+
     /*private const int SM_CXFRAME = 32;
     private const int SM_CYFRAME = 33;
     private const int SM_CXPADDEDBORDER = 92;*/
@@ -157,6 +197,12 @@ public class ClientAreaBorder : System.Windows.Controls.Border, IThemeControl
         }
 
         _oldWindow = newWindow;
+        _oldWindow?.ToString();
+        if (_oldWindow is { } previousWindow)
+        {
+            AttachedBorders.Remove(previousWindow);
+        }
+        AttachedBorders.AddOrUpdate(newWindow, this);
 
         ApplyDefaultWindowBorder();
     }

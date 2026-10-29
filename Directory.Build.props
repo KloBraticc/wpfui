@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <RepositoryDirectory>$(MSBuildThisFileDirectory)</RepositoryDirectory>
     <BuildToolsDirectory>$(RepositoryDirectory)build\</BuildToolsDirectory>
@@ -100,4 +100,9 @@
       </ItemGroup>
     </When>
   </Choose>
+
+	<PropertyGroup Condition="'$(MSBuildProjectName)' == 'Wpf.Ui.Cross' And '$(VoidstrapLinuxPackagingRoot)' == '' And ('$(BaseIntermediateOutputPath)' == '' Or '$(BaseIntermediateOutputPath)' == 'obj\' Or '$(BaseIntermediateOutputPath)' == 'obj/' Or '$(BaseIntermediateOutputPath)' == '$(MSBuildProjectDirectory)\obj\')">
+		<BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)src\Wpf.Ui\obj-cross\</BaseIntermediateOutputPath>
+		<MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+	</PropertyGroup>
 </Project>

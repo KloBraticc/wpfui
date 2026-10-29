@@ -1,4 +1,4 @@
-// This Source Code Form is subject to the terms of the MIT License.
+﻿// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -21,7 +21,7 @@ namespace Wpf.Ui.Interop;
 /// <summary>
 /// A set of dangerous methods to modify the appearance.
 /// </summary>
-internal static class UnsafeNativeMethods
+public static class UnsafeNativeMethods
 {
     /// <summary>
     /// Tries to set the corner preference of the selected window.
@@ -29,6 +29,16 @@ internal static class UnsafeNativeMethods
     /// <param name="handle">Selected window handle.</param>
     /// <param name="cornerPreference">Window corner preference.</param>
     /// <returns><see langword="true"/> if invocation of native Windows function succeeds.</returns>
+    public static bool ApplyWindowCornerPreference(System.Windows.Window window, WindowCornerPreference cornerPreference)
+    {
+        if (window is null || !GetHandle(window, out IntPtr windowHandle))
+        {
+            return false;
+        }
+
+        return ApplyWindowCornerPreference(windowHandle, cornerPreference);
+    }
+
     public static unsafe bool ApplyWindowCornerPreference(
         IntPtr handle,
         WindowCornerPreference cornerPreference

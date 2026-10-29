@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Shell;
@@ -23,6 +23,30 @@ public class UiWindow : System.Windows.Window
         typeof(WindowCornerPreference),
         typeof(UiWindow),
         new PropertyMetadata(WindowCornerPreference.Round, OnCornerPreferenceChanged));
+
+    public static readonly DependencyProperty DefaultBorderEnabledProperty = DependencyProperty.Register(
+        nameof(DefaultBorderEnabled),
+        typeof(bool),
+        typeof(UiWindow),
+        new PropertyMetadata(true));
+
+    public static readonly DependencyProperty DefaultBorderThemeOverwriteProperty = DependencyProperty.Register(
+        nameof(DefaultBorderThemeOverwrite),
+        typeof(Appearance.ApplicationTheme),
+        typeof(UiWindow),
+        new PropertyMetadata(Appearance.ApplicationTheme.Unknown));
+
+    public bool DefaultBorderEnabled
+    {
+        get => (bool)GetValue(DefaultBorderEnabledProperty);
+        set => SetValue(DefaultBorderEnabledProperty, value);
+    }
+
+    public Appearance.ApplicationTheme DefaultBorderThemeOverwrite
+    {
+        get => (Appearance.ApplicationTheme)GetValue(DefaultBorderThemeOverwriteProperty);
+        set => SetValue(DefaultBorderThemeOverwriteProperty, value);
+    }
 
     public static readonly DependencyProperty WindowBackdropTypeProperty = DependencyProperty.Register(
         nameof(WindowBackdropType),

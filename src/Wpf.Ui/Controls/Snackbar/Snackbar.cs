@@ -1,4 +1,4 @@
-// This Source Code Form is subject to the terms of the MIT License.
+﻿// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -49,6 +49,23 @@ public class Snackbar : ContentControl, IAppearanceControl, IIconControl
     );
 
     /// <summary>Identifies the <see cref="Title"/> dependency property.</summary>
+    public static readonly DependencyProperty MessageProperty = DependencyProperty.Register(
+        nameof(Message), typeof(string), typeof(Snackbar), new PropertyMetadata(null, OnMessageChanged));
+
+    public string? Message
+    {
+        get => (string?)GetValue(MessageProperty);
+        set => SetValue(MessageProperty, value);
+    }
+
+    private static void OnMessageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is Snackbar snackbar)
+        {
+            snackbar.SetCurrentValue(ContentProperty, e.NewValue);
+        }
+    }
+
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
         nameof(Title),
         typeof(object),
@@ -362,6 +379,11 @@ public class Snackbar : ContentControl, IAppearanceControl, IIconControl
         SetCurrentValue(ContentProperty, message);
         Show();
         return true;
+    }
+
+    public virtual bool Show(string title, string message, SymbolRegular icon)
+    {
+        return Show(title, message, icon, ControlAppearance.Secondary);
     }
 
     public virtual bool Show(string title, string message, SymbolRegular icon, ControlAppearance appearance)

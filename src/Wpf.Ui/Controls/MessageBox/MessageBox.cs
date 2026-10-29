@@ -1,4 +1,4 @@
-// This Source Code Form is subject to the terms of the MIT License.
+﻿// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -20,6 +20,33 @@ namespace Wpf.Ui.Controls;
 public class MessageBox : System.Windows.Window
 {
     /// <summary>Identifies the <see cref="ShowTitle"/> dependency property.</summary>
+    public static readonly DependencyProperty ButtonLeftNameProperty = DependencyProperty.Register(
+        nameof(ButtonLeftName), typeof(string), typeof(MessageBox), new PropertyMetadata(null));
+
+    public static readonly DependencyProperty ButtonRightNameProperty = DependencyProperty.Register(
+        nameof(ButtonRightName), typeof(string), typeof(MessageBox), new PropertyMetadata(null));
+
+    public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
+        nameof(Footer), typeof(object), typeof(MessageBox), new PropertyMetadata(null));
+
+    public string? ButtonLeftName
+    {
+        get => (string?)GetValue(ButtonLeftNameProperty);
+        set => SetValue(ButtonLeftNameProperty, value);
+    }
+
+    public string? ButtonRightName
+    {
+        get => (string?)GetValue(ButtonRightNameProperty);
+        set => SetValue(ButtonRightNameProperty, value);
+    }
+
+    public object? Footer
+    {
+        get => GetValue(FooterProperty);
+        set => SetValue(FooterProperty, value);
+    }
+
     public static readonly DependencyProperty ShowTitleProperty = DependencyProperty.Register(
         nameof(ShowTitle),
         typeof(bool),

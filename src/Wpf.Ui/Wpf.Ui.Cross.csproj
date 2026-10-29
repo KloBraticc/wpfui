@@ -1,4 +1,4 @@
-<Project Sdk="LibreWPF.Sdk">
+﻿<Project Sdk="LibreWPF.Sdk">
 
   <PropertyGroup>
     <BaseOutputPath Condition="'$(VoidstrapLinuxPackagingRoot)' == ''">$(MSBuildThisFileDirectory)bin-cross\$(RuntimeIdentifier)\</BaseOutputPath>
@@ -6,6 +6,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputType>Library</OutputType>
     <RootNamespace>Wpf.Ui</RootNamespace>
     <AssemblyName>Wpf.Ui</AssemblyName>
@@ -18,7 +19,7 @@
     <ProGpuWpfUseLibreWinForms>false</ProGpuWpfUseLibreWinForms>
     <PlatformTarget Condition="'$(RuntimeIdentifier)' == 'linux-arm64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">ARM64</PlatformTarget>
     <PlatformTarget Condition="'$(RuntimeIdentifier)' == 'linux-x64' Or '$(RuntimeIdentifier)' == 'osx-x64'">x64</PlatformTarget>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>preview</LangVersion>
     <Nullable>annotations</Nullable>
     <EnableSourceLink>false</EnableSourceLink>
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
@@ -35,12 +36,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" />
+    <ProjectReference Include="..\Wpf.Ui.Abstractions\Wpf.Ui.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Fonts\FluentSystemIcons-Filled.ttf" />
-    <Resource Include="Fonts\FluentSystemIcons-Regular.ttf" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="Microsoft.Windows.CsWin32">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="$(MSBuildThisFileDirectory)Fonts\Source\FluentSystemIcons-Filled.ttf" Link="Fonts\Source\FluentSystemIcons-Filled.ttf" />
+    <Resource Include="$(MSBuildThisFileDirectory)Fonts\Source\FluentSystemIcons-Regular.ttf" Link="Fonts\Source\FluentSystemIcons-Regular.ttf" />
   </ItemGroup>
 
 </Project>

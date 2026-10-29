@@ -1,4 +1,4 @@
-// This Source Code Form is subject to the terms of the MIT License.
+﻿// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -34,6 +34,33 @@ public class SplitButton : Button
     private Border? _splitButtonToggleBorder;
 
     /// <summary>Identifies the <see cref="Flyout"/> dependency property.</summary>
+    public static readonly RoutedEvent DropDownClickEvent = EventManager.RegisterRoutedEvent(
+        nameof(DropDownClick), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(SplitButton));
+
+    public event RoutedEventHandler DropDownClick
+    {
+        add => AddHandler(DropDownClickEvent, value);
+        remove => RemoveHandler(DropDownClickEvent, value);
+    }
+
+    public static readonly DependencyProperty DropDownOnRightProperty = DependencyProperty.Register(
+        nameof(DropDownOnRight), typeof(bool), typeof(SplitButton), new PropertyMetadata(true));
+
+    public static readonly DependencyProperty DropDownToolTipProperty = DependencyProperty.Register(
+        nameof(DropDownToolTip), typeof(object), typeof(SplitButton), new PropertyMetadata(null));
+
+    public bool DropDownOnRight
+    {
+        get => (bool)GetValue(DropDownOnRightProperty);
+        set => SetValue(DropDownOnRightProperty, value);
+    }
+
+    public object? DropDownToolTip
+    {
+        get => GetValue(DropDownToolTipProperty);
+        set => SetValue(DropDownToolTipProperty, value);
+    }
+
     public static readonly DependencyProperty FlyoutProperty = DependencyProperty.Register(
         nameof(Flyout),
         typeof(object),
@@ -181,6 +208,8 @@ public class SplitButton : Button
 
     private void OnSplitButtonToggleButtonOnPreviewMouseLeftButtonUp(object sender, MouseEventArgs e)
     {
+        RaiseEvent(new RoutedEventArgs(DropDownClickEvent, this));
+
         if (sender is not ToggleButton || _contextMenu is null || _splitButtonToggleBorder is null)
         {
             return;
