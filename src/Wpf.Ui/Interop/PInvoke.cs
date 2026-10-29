@@ -16,4 +16,10 @@ internal static partial class PInvoke
         DefaultDllImportSearchPaths(DllImportSearchPath.System32)
     ]
     internal static extern nint SetWindowLongPtr(HWND hWnd, WINDOW_LONG_PTR_INDEX nIndex, nint dwNewLong);
+
+    [
+        DllImport("USER32.dll", ExactSpelling = true, SetLastError = true),
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)
+    ]
+    internal static extern BOOL GetCursorPos(out POINT lpPoint);
 }
