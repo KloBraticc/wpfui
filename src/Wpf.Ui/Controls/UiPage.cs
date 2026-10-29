@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
@@ -34,8 +34,6 @@ public class UiPage : System.Windows.Controls.Page
         private set => SetValue(ScrollHostProperty, value);
     }
 
-    private bool _wrappingContent;
-
     private bool _scrollHostWrapped;
 
     public UiPage()
@@ -70,22 +68,14 @@ public class UiPage : System.Windows.Controls.Page
             return;
         }
 
-        _wrappingContent = true;
         _scrollHostWrapped = true;
-        try
+        DynamicScrollViewer viewer = new()
         {
-            DynamicScrollViewer viewer = new()
-            {
-                Content = Content,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
-            };
-            Content = viewer;
-            ScrollHost = viewer;
-        }
-        finally
-        {
-            _wrappingContent = false;
-        }
+            Content = Content,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        Content = viewer;
+        ScrollHost = viewer;
     }
 }
