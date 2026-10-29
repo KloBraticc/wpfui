@@ -3,6 +3,8 @@
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
 
+using System.Windows.Data;
+
 // ReSharper disable once CheckNamespace
 namespace Wpf.Ui.Controls;
 
@@ -12,6 +14,25 @@ namespace Wpf.Ui.Controls;
 public class CardExpander : System.Windows.Controls.Expander
 {
     /// <summary>Identifies the <see cref="Icon"/> dependency property.</summary>
+
+    public static readonly DependencyProperty IconFilledProperty = DependencyProperty.Register(
+        nameof(IconFilled), typeof(bool), typeof(CardExpander), new PropertyMetadata(false, OnIconFilledChanged));
+
+    public bool IconFilled
+    {
+        get => (bool)GetValue(IconFilledProperty);
+        set => SetValue(IconFilledProperty, value);
+    }
+
+    private static void OnIconFilledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CardExpander control && control.Icon is SymbolIcon symbol)
+        {
+            symbol.SetBinding(SymbolIcon.FilledProperty, new Binding(nameof(IconFilled)) { Source = control });
+            symbol.Filled = (bool)e.NewValue;
+        }
+    }
+
     public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
         nameof(Icon),
         typeof(IconElement),

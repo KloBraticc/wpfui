@@ -5,6 +5,7 @@
 
 // ReSharper disable once CheckNamespace
 using System.Windows.Automation.Peers;
+using System.Windows.Data;
 using System.Windows.Controls.Primitives;
 
 namespace Wpf.Ui.Controls;
@@ -23,6 +24,25 @@ public class CardAction : ButtonBase
     );
 
     /// <summary>Identifies the <see cref="Icon"/> dependency property.</summary>
+
+    public static readonly DependencyProperty IconFilledProperty = DependencyProperty.Register(
+        nameof(IconFilled), typeof(bool), typeof(CardAction), new PropertyMetadata(false, OnIconFilledChanged));
+
+    public bool IconFilled
+    {
+        get => (bool)GetValue(IconFilledProperty);
+        set => SetValue(IconFilledProperty, value);
+    }
+
+    private static void OnIconFilledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CardAction control && control.Icon is SymbolIcon symbol)
+        {
+            symbol.SetBinding(SymbolIcon.FilledProperty, new Binding(nameof(IconFilled)) { Source = control });
+            symbol.Filled = (bool)e.NewValue;
+        }
+    }
+
     public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
         nameof(Icon),
         typeof(IconElement),
