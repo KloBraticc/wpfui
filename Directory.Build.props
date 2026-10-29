@@ -4,6 +4,9 @@
     <BuildToolsDirectory>$(RepositoryDirectory)build\</BuildToolsDirectory>
   </PropertyGroup>
   <PropertyGroup>
+    <RunAnalyzers>false</RunAnalyzers>
+  </PropertyGroup>
+  <PropertyGroup>
     <Version>4.3.0</Version>
     <AssemblyVersion>4.3.0</AssemblyVersion>
   </PropertyGroup>
