@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Windows.Input;
 
 namespace Wpf.Ui.Input;
 
-public class RelayCommand : ICommand
+public class RelayCommand : IRelayCommand
 {
     private readonly Action<object?> _execute;
 
