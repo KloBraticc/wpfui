@@ -6,7 +6,6 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Wpf.Ui.Common;
 
 namespace Wpf.Ui.Controls;
 
@@ -55,7 +54,7 @@ public static class RinControlMotion
     private static readonly IEasingFunction CardEase = CreateCardEase();
 
     private static readonly DependencyPropertyDescriptor IsActiveDescriptor =
-        DependencyPropertyDescriptor.FromProperty(NavigationItem.IsActiveProperty, typeof(NavigationItem));
+        DependencyPropertyDescriptor.FromProperty(NavigationViewItem.IsActiveProperty, typeof(NavigationViewItem));
 
     private static readonly DependencyPropertyDescriptor IsMouseOverDescriptor =
         DependencyPropertyDescriptor.FromProperty(UIElement.IsMouseOverProperty, typeof(UIElement));
@@ -338,7 +337,7 @@ public static class RinControlMotion
             IsPressedDescriptor.AddValueChanged(control, OnControlStateChanged);
         }
 
-        if (control is NavigationItem)
+        if (control is NavigationViewItem)
         {
             IsActiveDescriptor.AddValueChanged(control, OnControlStateChanged);
         }
@@ -368,7 +367,7 @@ public static class RinControlMotion
             IsPressedDescriptor.RemoveValueChanged(element, OnControlStateChanged);
         }
 
-        if (element is NavigationItem)
+        if (element is NavigationViewItem)
         {
             IsActiveDescriptor.RemoveValueChanged(element, OnControlStateChanged);
         }
@@ -685,7 +684,7 @@ public static class RinControlMotion
     private static void UpdateSurface(Control control, MotionState state, bool animate)
     {
         bool pressed = control is ButtonBase button ? button.IsPressed : state.ItemPressed;
-        bool selected = control is NavigationItem navigationItem
+        bool selected = control is NavigationViewItem navigationItem
             ? navigationItem.IsActive
             : control is ListBoxItem listItem && listItem.IsSelected;
 

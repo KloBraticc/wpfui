@@ -38,7 +38,7 @@ public static class ScrollBarMotion
         public bool Attached;
         public bool Scrolling;
         public bool Dragging;
-        public DateTime LoadedAt;
+        public long LoadedAt;
         public double Size = double.NaN;
         public double ThumbOpacity = double.NaN;
         public double PanelOpacity = double.NaN;
@@ -117,7 +117,7 @@ public static class ScrollBarMotion
             return;
 
         state.Attached = true;
-        state.LoadedAt = DateTime.UtcNow;
+        state.LoadedAt = Environment.TickCount64;
         state.Timer = new DispatcherTimer(DispatcherPriority.Background, scrollBar.Dispatcher)
         {
             Interval = TimeSpan.FromMilliseconds(SettleMilliseconds),
@@ -225,7 +225,7 @@ public static class ScrollBarMotion
         if (!state.Attached || Math.Abs(e.NewValue - e.OldValue) < 0.5)
             return;
 
-        if ((DateTime.UtcNow - state.LoadedAt).TotalMilliseconds < LoadQuietMilliseconds)
+        if (Environment.TickCount64 - state.LoadedAt < LoadQuietMilliseconds)
             return;
 
         BeginSettle(state);
