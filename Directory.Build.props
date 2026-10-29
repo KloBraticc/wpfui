@@ -101,8 +101,12 @@
     </When>
   </Choose>
 
-	<PropertyGroup Condition="'$(MSBuildProjectName)' == 'Wpf.Ui.Cross' And '$(VoidstrapLinuxPackagingRoot)' == '' And ('$(BaseIntermediateOutputPath)' == '' Or '$(BaseIntermediateOutputPath)' == 'obj\' Or '$(BaseIntermediateOutputPath)' == 'obj/' Or '$(BaseIntermediateOutputPath)' == '$(MSBuildProjectDirectory)\obj\')">
+	<PropertyGroup Condition="'$(MSBuildProjectName.StartsWith(&quot;Wpf.Ui.Cross&quot;))' == 'true' And '$(VoidstrapLinuxPackagingRoot)' == '' And ('$(BaseIntermediateOutputPath)' == '' Or '$(BaseIntermediateOutputPath)' == 'obj\' Or '$(BaseIntermediateOutputPath)' == 'obj/' Or '$(BaseIntermediateOutputPath)' == '$(MSBuildProjectDirectory)\obj\')">
 		<BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)src\Wpf.Ui\obj-cross\</BaseIntermediateOutputPath>
 		<MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefaultItemExcludes>$(DefaultItemExcludes);obj-cross\**</DefaultItemExcludes>
 	</PropertyGroup>
 </Project>
