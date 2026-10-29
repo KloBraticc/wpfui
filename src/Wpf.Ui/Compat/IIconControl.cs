@@ -18,7 +18,7 @@ public interface IIconControl
     SymbolRegular Icon { get; set; }
 
     /// <summary>
-    /// Defines whether or not we should use the <see cref="Common.SymbolFilled"/>.
+    /// Defines whether or not we should use the <see cref="SymbolRegular"/>.
     /// </summary>
     bool IconFilled { get; set; }
 
