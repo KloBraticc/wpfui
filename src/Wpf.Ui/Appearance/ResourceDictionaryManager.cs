@@ -1,11 +1,9 @@
-﻿// This Source Code Form is subject to the terms of the MIT License.
+// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
 
-using System;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace Wpf.Ui.Appearance;
 
@@ -15,7 +13,7 @@ namespace Wpf.Ui.Appearance;
 internal class ResourceDictionaryManager
 {
     /// <summary>
-    /// Namespace, e.g. the library the resource is being searched for.
+    /// Gets the namespace, e.g. the library the resource is being searched for.
     /// </summary>
     public string SearchNamespace { get; }
 
@@ -39,24 +37,50 @@ internal class ResourceDictionaryManager
     /// </summary>
     /// <param name="resourceLookup">Any part of the resource name.</param>
     /// <returns><see cref="ResourceDictionary"/>, <see langword="null"/> if it doesn't exist.</returns>
-    public ResourceDictionary GetDictionary(string resourceLookup)
+    public ResourceDictionary? GetDictionary(string resourceLookup)
     {
-        Collection<ResourceDictionary> applicationDictionaries = Application.Current.Resources.MergedDictionaries;
+        Collection<ResourceDictionary> applicationDictionaries = GetApplicationMergedDictionaries();
 
         if (applicationDictionaries.Count == 0)
-            return null;
-
-        resourceLookup = resourceLookup.Trim();
-
-        foreach (var t in applicationDictionaries)
         {
-            if (Matches(t, resourceLookup))
-                return t;
+            return null;
+        }
 
-            foreach (var t1 in t!.MergedDictionaries)
+        foreach (ResourceDictionary t in applicationDictionaries)
+        {
+            string resourceDictionaryUri;
+
+            if (t?.Source != null)
             {
-                if (Matches(t1, resourceLookup))
-                    return t1;
+                resourceDictionaryUri = t.Source.ToString();
+
+                if (
+                    resourceDictionaryUri.Contains(SearchNamespace, StringComparison.OrdinalIgnoreCase)
+                    && resourceDictionaryUri.Contains(resourceLookup, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    return t;
+                }
+            }
+
+            foreach (ResourceDictionary? t1 in t!.MergedDictionaries)
+            {
+                if (t1?.Source == null)
+                {
+                    continue;
+                }
+
+                resourceDictionaryUri = t1.Source.ToString();
+
+                if (
+                    !resourceDictionaryUri.Contains(SearchNamespace, StringComparison.OrdinalIgnoreCase)
+                    || !resourceDictionaryUri.Contains(resourceLookup, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    continue;
+                }
+
+                return t1;
             }
         }
 
@@ -68,31 +92,54 @@ internal class ResourceDictionaryManager
     /// </summary>
     /// <param name="resourceLookup">Any part of the resource name.</param>
     /// <param name="newResourceUri">A valid <see cref="Uri"/> for the replaced resource.</param>
-    /// <returns></returns>
-    public bool UpdateDictionary(string resourceLookup, Uri newResourceUri)
+    /// <returns><see langword="true"/> if the dictionary <see cref="Uri"/> was updated. <see langword="false"/> otherwise.</returns>
+    public bool UpdateDictionary(string resourceLookup, Uri? newResourceUri)
     {
-        Collection<ResourceDictionary> applicationDictionaries = Application.Current.Resources.MergedDictionaries;
-        if (applicationDictionaries.Count == 0)
-            return false;
+        Collection<ResourceDictionary> applicationDictionaries = UiApplication
+            .Current
+            .Resources
+            .MergedDictionaries;
 
-        if (newResourceUri == null)
-            return false;
-
-        resourceLookup = resourceLookup.Trim();
-
-        for (int i = 0; i < applicationDictionaries.Count; i++)
+        if (applicationDictionaries.Count == 0 || newResourceUri is null)
         {
-            if (Matches(applicationDictionaries[i], resourceLookup))
-            {
-                applicationDictionaries[i] = new() { Source = newResourceUri };
+            return false;
+        }
 
-                return true;
+        for (var i = 0; i < applicationDictionaries.Count; i++)
+        {
+            string sourceUri;
+
+            if (applicationDictionaries[i]?.Source != null)
+            {
+                sourceUri = applicationDictionaries[i].Source.ToString();
+
+                if (
+                    sourceUri.Contains(SearchNamespace, StringComparison.OrdinalIgnoreCase)
+                    && sourceUri.Contains(resourceLookup, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    applicationDictionaries[i] = new() { Source = newResourceUri };
+
+                    return true;
+                }
             }
 
-            for (int j = 0; j < applicationDictionaries[i].MergedDictionaries.Count; j++)
+            for (var j = 0; j < applicationDictionaries[i].MergedDictionaries.Count; j++)
             {
-                if (!Matches(applicationDictionaries[i].MergedDictionaries[j], resourceLookup))
+                if (applicationDictionaries[i].MergedDictionaries[j]?.Source == null)
+                {
                     continue;
+                }
+
+                sourceUri = applicationDictionaries[i].MergedDictionaries[j].Source.ToString();
+
+                if (
+                    !sourceUri.Contains(SearchNamespace, StringComparison.OrdinalIgnoreCase)
+                    || !sourceUri.Contains(resourceLookup, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    continue;
+                }
 
                 applicationDictionaries[i].MergedDictionaries[j] = new() { Source = newResourceUri };
 
@@ -103,12 +150,8 @@ internal class ResourceDictionaryManager
         return false;
     }
 
-    private bool Matches(ResourceDictionary dictionary, string resourceLookup)
+    private Collection<ResourceDictionary> GetApplicationMergedDictionaries()
     {
-        string source = dictionary?.Source?.OriginalString;
-
-        return source != null &&
-               source.Contains(SearchNamespace, StringComparison.OrdinalIgnoreCase) &&
-               source.Contains(resourceLookup, StringComparison.OrdinalIgnoreCase);
+        return UiApplication.Current.Resources.MergedDictionaries;
     }
 }

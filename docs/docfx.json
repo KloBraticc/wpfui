@@ -3,61 +3,82 @@
     {
       "src": [
         {
-          "files": ["*.csproj"],
-          "exclude": ["**/bin/**", "**/obj/**"],
-          "src": "../src/Wpf.Ui"
+          "files": [
+            "Wpf.Ui/*.csproj",
+            "Wpf.Ui.Tray/*.csproj",
+            "Wpf.Ui.Abstractions/*.csproj",
+            "Wpf.Ui.DependencyInjection/*.csproj"
+          ],
+          "src": "../src"
         }
       ],
-      "dest": "documentation",
-      "properties": {
-        "TargetFramework": "net6.0"
-      },
+      "dest": "api",
+      "includePrivateMembers": false,
       "disableGitFeatures": false,
-      "disableDefaultFilter": false
+      "disableDefaultFilter": false,
+      "noRestore": false,
+      "namespaceLayout": "flattened",
+      "memberLayout": "samePage",
+      "allowCompilationErrors": false
     }
   ],
   "build": {
     "content": [
       {
-        "files": ["tutorial/**.md", "tutorial/**/toc.yml", "toc.yml", "*.md"]
-      },
-      {
-        "files": ["documentation/**.yml", "documentation/index.md"]
+        "files": [
+          "**/*.{md,yml}"
+        ],
+        "exclude": [
+          "_site/**",
+          "obj/**",
+          "architecture/**"
+        ]
       }
     ],
     "resource": [
       {
-        "files": ["images/**", "manifest.webmanifest", "robots.txt"]
+        "files": [
+          "**/images/**",
+          "codesnippet/**",
+          "manifest.webmanifest",
+          "robots.txt"
+        ],
+        "exclude": [
+          "_site/**",
+          "obj/**"
+        ]
       }
     ],
-    "overwrite": [
-      {
-        "exclude": ["obj/**", "_site/**"]
-      }
+    "xref": [],
+    "xrefService": [
+      "https://xref.docs.microsoft.com/query?uid={uid}"
     ],
-    "dest": "_site",
+    "postProcessors": [
+      "ExtractSearchIndex"
+    ],
     "globalMetadata": {
       "_appTitle": "WPF UI",
       "_appName": "WPF UI",
       "_appFaviconPath": "images/favicon.ico",
       "_appLogoPath": "images/wpfui.png",
-      "_appFooter": "",
-      "_description": "A simple way to make your application written in WPF keep up with modern design trends.",
-      "_copyrightFooter": "",
-      "_enableSearch": false,
-      "_disableSideFilter": false,
-      "_enableNewTab": true,
-      "_disableContribution": false,
-      "_disableBreadcrumb": false
+      "_appFooter": "<span>Made with <a href=\"https://dotnet.github.io/docfx\" rel=\"noreferrer\">docfx</a>, <a href=\"https://chat.openai.com/\" rel=\"noreferrer\">ChatGPT</a> | Copyright © 2026 <a href=\"https://lepo.co/\">lepo.co</a></span>"
     },
+    "dest": "_site",
+    "template": [
+      "default",
+      "templates/wpfui"
+    ],
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
-    "template": ["default", "templates/singulinkfx"],
-    "postProcessors": [],
     "markdownEngineName": "markdig",
     "noLangKeyword": false,
     "keepFileLink": false,
     "cleanupCacheHistory": false,
     "disableGitFeatures": false
+  },
+  "sitemap": {
+    "baseUrl": "https://wpfui.lepo.co",
+    "priority": 0.1,
+    "changefreq": "monthly"
   }
 }

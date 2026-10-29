@@ -3,93 +3,66 @@
 
 # WPF UI
 
-[Created with ❤ in Poland by lepo.co](https://dev.lepo.co/)  
-A simple way to make your application written in WPF keep up with modern design trends. Library changes the base elements like `Page`, `ToggleButton` or `List`, and also includes additional controls like `Navigation`, `NumberBox`, `Dialog` or `Snackbar`.
+[Created with ❤ in Poland by Leszek Pomianowski](https://lepo.co/) and [wonderful open-source community](https://github.com/lepoco/wpfui/graphs/contributors).  
+WPF UI provides the Fluent experience in your known and loved WPF framework. Intuitive design, themes, navigation and new immersive controls. All natively and effortlessly. Library changes the base elements like `Page`, `ToggleButton` or `List`, and also includes additional controls like `Navigation`, `NumberBox`, `Dialog` or `Snackbar`.
 
-[![GitHub license](https://img.shields.io/github/license/lepoco/wpfui)](https://github.com/lepoco/wpfui/blob/master/LICENSE) [![Nuget](https://img.shields.io/nuget/v/WPF-UI)](https://www.nuget.org/packages/WPF-UI/) [![Nuget](https://img.shields.io/nuget/dt/WPF-UI?label=nuget-downloads)](https://www.nuget.org/packages/WPF-UI/) [![VS 2022 Downloads](https://img.shields.io/visual-studio-marketplace/i/lepo.WPF-UI?label=vs-2022-downloads)](https://marketplace.visualstudio.com/items?itemName=lepo.WPF-UI) [![Size](https://img.shields.io/github/repo-size/lepoco/wpfui)](https://github.com/lepoco/wpfui) [![Sponsors](https://img.shields.io/github/sponsors/lepoco)](https://github.com/sponsors/lepoco)
+[![Discord](https://img.shields.io/discord/1071051348348514375?label=discord)](https://discord.gg/AR9ywDUwGq) [![GitHub license](https://img.shields.io/github/license/lepoco/wpfui)](https://github.com/lepoco/wpfui/blob/master/LICENSE) [![Nuget](https://img.shields.io/nuget/v/WPF-UI)](https://www.nuget.org/packages/WPF-UI/) [![Nuget](https://img.shields.io/nuget/dt/WPF-UI?label=nuget)](https://www.nuget.org/packages/WPF-UI/)
 
-![ua](https://user-images.githubusercontent.com/13592821/184498735-d296feb8-0f9b-45df-bc0d-b7f0b6f580ed.png)
-
-### Deliver humanitarian aid directly to Ukraine.
-
-https://bank.gov.ua/en/about/humanitarian-aid-to-ukraine
-
-### Refugees in Poland
-
-Many forms of support for refugees from Ukraine and organizations supporting them are available on the Polish government website  
-https://pomagamukrainie.gov.pl/chce-pomoc/prywatnie/pomoc-finansowa
+**Deliver humanitarian aid directly to Ukraine**  
+<https://bank.gov.ua/en/about/humanitarian-aid-to-ukraine>
 
 ![ua](https://user-images.githubusercontent.com/13592821/184498735-d296feb8-0f9b-45df-bc0d-b7f0b6f580ed.png)
 
-## 🚀 Getting started
+## Support
+
+To ensure you receive the expert guidance you need, we offer a variety of support plans designed to meet the diverse needs of our community. Whether you are looking to modernize your WPF applications or need assistance with our other libraries, our tailored support solutions are here to help. From priority email support to 24/7 dedicated assistance, we provide flexible plans to suit your project requirements.
+
+[Take a look at the lepo.co support plans](https://lepo.co/support)  
+[Sponsor WPF UI on GitHub](https://github.com/sponsors/pomianowski)
+
+## Getting started
 
 For a starter guide see our [documentation](https://wpfui.lepo.co/documentation/).
 
+**WPF UI Gallery** is a free application available in the _Microsoft Store_, with which you can test all functionalities.  
+<https://apps.microsoft.com/store/detail/wpf-ui/9N9LKV8R9VGM?cid=windows-lp-hero>
+
+```powershell
+winget install 'WPF UI'
+```
+
 **WPF UI** is delivered via **NuGet** package manager. You can find the package here:  
-https://www.nuget.org/packages/wpf-ui/
+<https://www.nuget.org/packages/wpf-ui/>
 
 **Visual Studio**  
 The plugin for **Visual Studio 2022** let you easily create new projects using **WPF UI**.  
-https://marketplace.visualstudio.com/items?itemName=lepo.wpf-ui
+<https://marketplace.visualstudio.com/items?itemName=lepo.wpf-ui>
 
-## 📁 What's included?
-
-| Name                                                                                            | Framework                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Wpf.Ui**<br />Library that allows you to use all features in your own application             | [![NET6](https://img.shields.io/badge/.NET-6.0-red)](https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/WPFUI.csproj) [![NET5](https://img.shields.io/badge/.NET-5.0-blue)](https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/WPFUI.csproj)<br/>[![NETCore3](https://img.shields.io/badge/.NET%20Core-3.1-brightgreen)](https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/WPFUI.csproj)<br/>[![NETFramework48](https://img.shields.io/badge/.NET%20Framework-4.8-orange)](https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/WPFUI.csproj)<br/>[![NETFramework47](https://img.shields.io/badge/.NET%20Framework-4.7-orange)](https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/WPFUI.csproj)<br/>[![NETFramework461](https://img.shields.io/badge/.NET%20Framework-4.6.1-orange)](https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/WPFUI.csproj) |
-| **Wpf.Ui.Demo**<br />An MVVM application written in WPF .NET 6 where you can test the features. | [![NET6win](https://img.shields.io/badge/.NET-6.0--windows-red)](https://github.com/lepoco/wpfui/blob/main/WPFUI.Demo/WPFUI.Demo.csproj)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Wpf.Ui.SimpleDemo**<br />Simple .NET 6 application with navigation.                           | [![NET6win](https://img.shields.io/badge/.NET-6.0--windows-red)](https://github.com/lepoco/wpfui/blob/main/WPFUI.Demo/WPFUI.Demo.csproj)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Wpf.Ui.FontMapper**<br />Console app for generating Fluent System Icons enums.                | [![NET6win](https://img.shields.io/badge/.NET-6.0-yellow)](https://github.com/lepoco/wpfui/blob/main/WPFUI.Demo/WPFUI.Demo.csproj)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **Wpf.Ui.Extension**<br />Project for Visual Studio 2022 extension.                             | [![NET6win](https://img.shields.io/badge/MS%20Build-blue)](https://github.com/lepoco/wpfui/blob/main/WPFUI.Demo/WPFUI.Demo.csproj)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-
-## 🏭 Branches
-
-| Branch                                                                       | Status                                                                                                                                                                   |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [**WPF UI - Main**](https://github.com/lepoco/wpfui/tree/main)               | [![Build status](https://img.shields.io/github/workflow/status/lepoco/wpfui/DotNet%20Main/main)](https://github.com/lepoco/wpfui/actions/workflows/CI.yml)               |
-| [**WPF UI - Development**](https://github.com/lepoco/wpfui/tree/development) | [![Build status](https://img.shields.io/github/workflow/status/lepoco/wpfui/DotNet%20Development/development)](https://github.com/lepoco/wpfui/actions/workflows/DV.yml) |
-
-## 📷 Screenshots
+## Screenshots
 
 ![Demo App Sample](https://user-images.githubusercontent.com/13592821/166259110-0fb98120-fe34-4e6d-ab92-9f72ad7113c3.png)
 
-![Text Editor Sample](https://user-images.githubusercontent.com/13592821/165918838-a65cbb86-4fc4-4efb-adb7-e39027fb661f.png)
+![Monaco Editor](https://user-images.githubusercontent.com/13592821/258610583-7d71f69d-45b3-4be6-bcb8-8cf6cd60a2ff.png)
 
 ![Store App Sample](https://user-images.githubusercontent.com/13592821/165918914-6948fb42-1ee1-4c36-870e-65bb8ffe3c8a.png)
 
-## 🏗️ Works with Visual Studio Designer
+## Works with Visual Studio Designer
 
 ![VS2022 Designer Preview](https://user-images.githubusercontent.com/13592821/165919228-0aa3a36c-fb37-4198-835e-53488845226c.png)
 
-## 🏁 Virtualized panels for displaying thousands controls
-
-![WPF UI virtualized wrap panels](https://user-images.githubusercontent.com/13592821/167254364-bc7d1106-2740-4337-907c-0e0f1ce4c320.png)
-
-## ❤️ Custom Tray icon and menu in pure WPF
+## Custom Tray icon and menu in pure WPF
 
 ![WPF UI Tray menu in WPF](https://user-images.githubusercontent.com/13592821/166259470-2d48a88e-47ce-4f8f-8f07-c9b110de64a5.png)
 
-## ⚓ Custom Windows 11 SnapLayout available for TitleBar.
+## Custom Windows 11 SnapLayout available for TitleBar
 
 ![WPF UI Snap Layout for WPF](https://user-images.githubusercontent.com/13592821/166259869-e60d37e4-ded4-46bf-80d9-f92c47266f34.png)
 
-## 🕹️ Radiograph
+## Development
 
-Radiograph is a computer hardware monitoring app that uses **WPF UI**.
+If you want to propose a new functionality or submit a bugfix, create a [Pull Request](https://github.com/lepoco/wpfui/compare/main...main) for the branch [main](https://github.com/lepoco/wpfui/tree/main).
 
-![Radiograph screenshot](https://user-images.githubusercontent.com/13592821/165918625-6cc72bb1-2617-40fa-a193-60fea0efcd65.png)
-
-[<img src="https://github.com/lepoco/wpfui/blob/main/.github/assets/microsoft-badge.png?raw=true" width="120">](https://www.microsoft.com/en-us/p/radiograph/9nh1p86h06cg?activetab=pivot:overviewtab)
-
-## 📖 Documentation
-
-Documentation can be found at https://wpfui.lepo.co/. We also have a [tutorial](https://wpfui.lepo.co/tutorial/) over there for newcomers.
-
-## 🚧 Development
-
-If you want to propose a new functionality or submit a bugfix, create a [Pull Request](https://github.com/lepoco/wpfui/compare/development...development) for the branch [development](https://github.com/lepoco/wpfui/tree/development).
-
-## 📐 How to use?
+## How to use?
 
 First, your application needs to load custom styles, add in the **MyApp\App.xaml** file:
 
@@ -100,7 +73,7 @@ First, your application needs to load custom styles, add in the **MyApp\App.xaml
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <ui:ThemesDictionary Theme="Dark" />
+        <ui:ThemesDictionary Theme="Light" />
         <ui:ControlsDictionary />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
@@ -108,31 +81,38 @@ First, your application needs to load custom styles, add in the **MyApp\App.xaml
 </Application>
 ```
 
+If your application does not have **MyApp\App.xaml** file, use `ApplicationThemeManager.Apply(frameworkElement)` to apply/update the theme resource in the `frameworkElement`.
+
+```C#
+public partial class MainWindow
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+        ApplicationThemeManager.Apply(this);
+    }
+}
+```
+
 Now you can create fantastic apps, e.g. with one button:
 
 ```xml
-<ui:UiWindow
+<ui:FluentWindow
   ...
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
-  <Grid>
-    <ui:Button
-      Content="Hello World"
-      Icon="Fluent24"/>
-  </Grid>
-</ui:UiWindow>
+  <StackPanel>
+      <ui:TitleBar Title="WPF UI"/>
+      <ui:Card Margin="8">
+          <ui:Button Content="Hello World" Icon="{ui:SymbolIcon Fluent24}" />
+      </ui:Card>
+  </StackPanel>
+</ui:FluentWindow>
 ```
-
-## Special thanks
-
-Crafting apps for .NET without the creators of tools like ReSharper or XAML Styler would never be such a fantastic adventure.
-
-- [🔗 JetBrains ReSharper](https://www.jetbrains.com/resharper/)
-- [🔗 XAML Styler](https://github.com/Xavalon/XamlStyler)
 
 ## Microsoft Property
 
 Design of the interface, choice of colors and the appearance of the controls were inspired by projects made by Microsoft for Windows 11.  
-The Wpf.Ui.Demo app includes icons from Shell32 for Windows 11. These icons are the legal property of Microsoft and you may not use them in your own app without permission. They are used here as an example of creating tools for Microsoft systems.
+The Wpf.Ui.Gallery app includes icons from _Microsoft WinUI 3 Gallery_ app. They are used here as an example of creating tools for Microsoft systems.
 
 ## Segoe Fluent Icons
 
@@ -146,13 +126,6 @@ In the app dictionaries, you can add an alternate path to the font
 ```XML
 <FontFamily x:Key="SegoeFluentIcons">pack://application:,,,/;component/Fonts/#Segoe Fluent Icons</FontFamily>
 ```
-
-## Compilation
-
-Use Visual Studio 2022 and invoke the .sln.
-
-Visual Studio  
-**WPF UI** is an Open Source project. You are entitled to download and use the freely available Visual Studio Community Edition to build, run or develop for WPF UI. As per the Visual Studio Community Edition license, this applies regardless of whether you are an individual or a corporate user.
 
 ## Code of Conduct
 

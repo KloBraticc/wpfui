@@ -1,145 +1,169 @@
-﻿// This Source Code Form is subject to the terms of the MIT License.
+// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
 
-using System.Text;
-using System.Text.Json;
+using System.Net.Http;
+using System.Net.Http.Json;
 using Wpf.Ui.FontMapper;
 
 Console.WriteLine("Fluent System Icons Mapper");
 System.Diagnostics.Debug.WriteLine("INFO | Fluent System Icons Mapper", "Wpf.Ui.FontMapper");
 
-var fluentSystemIconsVersion = "1.1.181";
-var executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-var fontSources = new FontSource[]
+var workingDirectory =
+    Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)
+    ?? throw new InvalidOperationException("Could not determine the working directory.");
+
+var regularIcons = new FontSource(
+    "SymbolRegular",
+    "Represents a list of regular Fluent System Icons <c>v.{{FLUENT_SYSTEM_ICONS_VERSION}}</c>.\n<para>May be converted to <see langword=\"char\"/> using <c>GetGlyph()</c> or to <see langword=\"string\"/> using <c>GetString()</c></para>",
+    @"https://raw.githubusercontent.com/microsoft/fluentui-system-icons/main/fonts/FluentSystemIcons-Regular.json",
+    "generated\\SymbolRegular.cs"
+);
+var filledIcons = new FontSource(
+    "SymbolFilled",
+    "Represents a list of filled Fluent System Icons <c>v.{{FLUENT_SYSTEM_ICONS_VERSION}}</c>.\n<para>May be converted to <see langword=\"char\"/> using <c>GetGlyph()</c> or to <see langword=\"string\"/> using <c>GetString()</c></para>",
+    @"https://raw.githubusercontent.com/microsoft/fluentui-system-icons/main/fonts/FluentSystemIcons-Filled.json",
+    "generated\\SymbolFilled.cs"
+);
+
+Task<string> FetchVersion()
 {
-    new()
-    {
-        Name = "SymbolRegular",
-        Description = $"Represents a list of regular Fluent System Icons <c>v.{fluentSystemIconsVersion}</c>.\n<para>May be converted to <see langword=\"char\"/> using <c>GetGlyph()</c> or to <see langword=\"string\"/> using <c>GetString()</c></para>",
-        SourcePath = "FluentSystemIcons-Regular.json",
-        DestinationPath = "generated\\SymbolRegular.cs"
-    },
-    new()
-    {
-        Name = "SymbolFilled",
-        Description = $"Represents a list of filled Fluent System Icons <c>v.{fluentSystemIconsVersion}</c>.\n<para>May be converted to <see langword=\"char\"/> using <c>GetGlyph()</c> or to <see langword=\"string\"/> using <c>GetString()</c></para>",
-        SourcePath = "FluentSystemIcons-Filled.json",
-        DestinationPath = "generated\\SymbolFilled.cs"
-    },
-    // new()
-    // {
-    //     Name = "SymbolResizable",
-    //     Description = $"Represents a list of resizable Fluent System Icons <c>v.{fluentSystemIconsVersion}</c>.\n<para>May be converted to <see langword=\"char\"/> using <c>GetGlyph()</c> or to <see langword=\"string\"/> using <c>GetString()</c></para>",
-    //     SourcePath = "FluentSystemIcons-Resizable.json",
-    //     DestinationPath = "generated\\SymbolResizable.cs"
-    // }
-};
+    // using var httpClient = new HttpClient();
+    // httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; AcmeInc/1.0)");
+    //
+    // return (
+    //         await httpClient.GetFromJsonAsync<IEnumerable<GitTag>>(
+    //             @"https://api.github.com/repos/microsoft/fluentui-system-icons/git/refs/tags"
+    //         )
+    //     )
+    //         ?.Last()
+    //         ?.Ref.Replace("refs/tags/", string.Empty)
+    //         .Trim()
+    //     ?? throw new Exception("Unable to parse the version string");
+    return Task.FromResult("1.1.316");
+}
 
-Parallel.ForEach(fontSources, singleFont =>
+string FormatIconName(string rawIconName)
 {
-    if (String.IsNullOrEmpty(executingPath))
-        return;
+    rawIconName = rawIconName
+        .Replace("ic_fluent_", string.Empty)
+        .Replace("_regular", string.Empty)
+        .Replace("_filled", string.Empty);
 
-    var sourcePath = Path.Combine(executingPath, singleFont.SourcePath);
-    var destinationPath = Path.Combine(executingPath, singleFont.DestinationPath);
+    var iconName = string.Empty;
 
-    if (!File.Exists(sourcePath))
-        return;
+    foreach (var newPart in rawIconName.Split('_'))
+    {
+        var charactersArray = newPart.ToCharArray();
+        charactersArray[0] = char.ToUpper(charactersArray[0]);
 
-    Console.WriteLine($"Mapping {singleFont.Name}");
-    System.Diagnostics.Debug.WriteLine($"INFO | Mapping {singleFont.Name}", "Wpf.Ui.FontMapper");
+        iconName += new string(charactersArray);
+    }
 
-    var fileStream = new FileStream(sourcePath, FileMode.Open);
-    using var reader = new StreamReader(fileStream);
+    return iconName;
+}
 
-    var jsonData = JsonSerializer.Deserialize<Dictionary<string, long>>(reader.ReadToEnd()) ?? new Dictionary<string, long>();
+async Task FetchFontContents(FontSource source, string version)
+{
+    using var httpClient = new HttpClient();
+    httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; AcmeInc/1.0)");
+
+    Dictionary<string, long> sourceJsonContent =
+        await httpClient.GetFromJsonAsync<Dictionary<string, long>>(source.SourcePath)
+        ?? throw new Exception("Unable to obtain JSON data");
+
+    sourceJsonContent = sourceJsonContent
+        .OrderBy(x => x.Value)
+        .ToDictionary(k => FormatIconName(k.Key), v => v.Value);
+
+    source.SetContents(sourceJsonContent);
+    source.UpdateVersion(version);
+}
+
+var recentVersion = await FetchVersion();
+
+await FetchFontContents(regularIcons, recentVersion);
+await FetchFontContents(filledIcons, recentVersion);
+
+ICollection<string> regularKeys = regularIcons.Contents.Keys;
+ICollection<string> filledKeys = filledIcons.Contents.Keys;
+IEnumerable<string> keysToRemove = regularKeys.Except(filledKeys).Concat(filledKeys.Except(regularKeys));
+
+foreach (var key in keysToRemove)
+{
+    _ = regularIcons.Contents.Remove(key);
+    _ = filledIcons.Contents.Remove(key);
+
+    Console.WriteLine($"Deleted key \"{key}\" because no duplicate found in all lists");
+}
+
+async Task WriteToFile(FontSource singleFont, string fileRootDirectory)
+{
+    var destinationPath = Path.Combine(fileRootDirectory, singleFont.DestinationPath);
+
     var enumName = singleFont.Name;
 
     var enumMapStringBuilder = new StringBuilder();
 
-    enumMapStringBuilder.AppendLine("// This Source Code Form is subject to the terms of the MIT License.");
-    enumMapStringBuilder.AppendLine("// If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.");
-    enumMapStringBuilder.AppendLine("// Copyright (C) Leszek Pomianowski and WPF UI Contributors.");
-    enumMapStringBuilder.AppendLine("// All Rights Reserved.");
-    enumMapStringBuilder.AppendLine("");
-    enumMapStringBuilder.AppendLine("namespace Wpf.Ui.Common;");
-    enumMapStringBuilder.AppendLine("");
+    _ = enumMapStringBuilder
+        .AppendLine("// This Source Code Form is subject to the terms of the MIT License.")
+        .AppendLine(
+            "// If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT."
+        )
+        .AppendLine("// Copyright (C) Leszek Pomianowski and WPF UI Contributors.")
+        .AppendLine("// All Rights Reserved.")
+        .AppendLine()
+        .AppendLine("namespace Wpf.Ui.Controls;")
+        .AppendLine()
+        .AppendLine("/// <summary>")
+        .AppendLine($"/// {singleFont.Description.Replace("\n", "\n/// ")}")
+        .AppendLine("/// </summary>")
+        .AppendLine("#pragma warning disable CS1591")
+        .AppendLine("public enum " + enumName)
+        .AppendLine("{")
+        .AppendLine("    /// <summary>")
+        .AppendLine("    /// Actually, this icon is not empty, but makes it easier to navigate.")
+        .AppendLine("    /// </summary>")
+        .AppendLine("    Empty = 0x0,")
+        .AppendLine()
+        .AppendLine("    // Automatically generated, may contain bugs.")
+        .AppendLine();
 
-    enumMapStringBuilder.AppendLine("/// <summary>");
-    enumMapStringBuilder.AppendLine($"/// {singleFont.Description.Replace("\n", "\n/// ")}");
-    enumMapStringBuilder.AppendLine("/// </summary>");
-
-    enumMapStringBuilder.AppendLine("#pragma warning disable CS1591");
-
-    enumMapStringBuilder.AppendLine("public enum " + enumName);
-    enumMapStringBuilder.AppendLine("{");
-    enumMapStringBuilder.AppendLine("    /// <summary>");
-    enumMapStringBuilder.AppendLine("    /// Actually, this icon is not empty, but makes it easier to navigate.");
-    enumMapStringBuilder.AppendLine("    /// </summary>");
-    enumMapStringBuilder.AppendLine("    Empty = 0x0,");
-    enumMapStringBuilder.AppendLine("");
-    enumMapStringBuilder.AppendLine("    // Automatically generated, may contain bugs.");
-    enumMapStringBuilder.AppendLine("");
-
-    var parsedJsonData = new Dictionary<string, long>();
-
-    foreach (var singleItem in jsonData)
-    {
-        var iconName = String.Empty;
-        var iconId = singleItem.Value;
-        var name = singleItem.Key
-            .Replace("ic_fluent_", String.Empty)
-            .Replace("_regular", String.Empty)
-            .Replace("_filled", String.Empty);
-
-        if (iconId > 65535)
-            iconId -= 65536;
-
-        foreach (var newPart in name.Split('_'))
-        {
-            var charactersArray = newPart.ToCharArray();
-            charactersArray[0] = Char.ToUpper(charactersArray[0]);
-
-            iconName += new string(charactersArray);
-        }
-
-        if (!parsedJsonData.ContainsKey(iconName))
-            parsedJsonData.Add(iconName, iconId);
-    }
-
-    parsedJsonData = parsedJsonData.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-
-    foreach (var singleIcon in parsedJsonData)
+    foreach (KeyValuePair<string, long> singleIcon in singleFont.Contents)
     {
         // Older versions
         if (singleIcon.Value < 32)
         {
-            enumMapStringBuilder.AppendLine($"");
-            enumMapStringBuilder.AppendLine($"    /// <summary>");
-            enumMapStringBuilder.AppendLine($"    /// Blank icon.");
-            enumMapStringBuilder.AppendLine($"    /// </summary>");
+            _ = enumMapStringBuilder
+                .AppendLine()
+                .AppendLine("    /// <summary>")
+                .AppendLine("    /// Blank icon.")
+                .AppendLine("    /// </summary>");
         }
 
-        enumMapStringBuilder.AppendLine($"    {singleIcon.Key} = 0x{singleIcon.Value:X},");
+        _ = enumMapStringBuilder.AppendLine($"    {singleIcon.Key} = 0x{singleIcon.Value:X},");
     }
 
-    enumMapStringBuilder.AppendLine("}");
-    enumMapStringBuilder.AppendLine("");
-    enumMapStringBuilder.AppendLine("#pragma warning restore CS1591");
-    enumMapStringBuilder.AppendLine("");
+    _ = enumMapStringBuilder
+        .AppendLine("}")
+        .AppendLine()
+        .AppendLine("#pragma warning restore CS1591")
+        .Append("\r\n");
 
     var fileInfo = new FileInfo(destinationPath);
 
-    if (fileInfo.Directory != null && !fileInfo.Directory.Exists)
-        lock (fileInfo.Directory)
-        { fileInfo.Directory.Create(); }
+    if (fileInfo.Directory is { Exists: false })
+    {
+        fileInfo.Directory.Create();
+    }
 
-    File.WriteAllText(destinationPath, enumMapStringBuilder.ToString());
-});
+    await File.WriteAllTextAsync(destinationPath, enumMapStringBuilder.ToString());
+    Console.WriteLine($"Wrote to file \"{destinationPath}\"");
+}
+
+await WriteToFile(regularIcons, workingDirectory);
+await WriteToFile(filledIcons, workingDirectory);
 
 Console.WriteLine("Done.");
 System.Diagnostics.Debug.WriteLine("INFO | Done.", "Wpf.Ui.FontMapper");
-
-return 0;

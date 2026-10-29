@@ -1,14 +1,16 @@
-using System;
-using System.Globalization;
-using System.Windows;
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
+// Copyright (C) Leszek Pomianowski and WPF UI Contributors.
+// All Rights Reserved.
+
 using System.Windows.Data;
-using System.Windows.Media;
 
 namespace Wpf.Ui.Converters;
 
 public class ClipConverter : IMultiValueConverter
 {
-    public object? Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    /// <inheritdoc />
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
         if (values.Length != 3)
         {
@@ -29,6 +31,7 @@ public class ClipConverter : IMultiValueConverter
         return new RectangleGeometry(new Rect(0, 0, clippedWidth, height));
     }
 
+    /// <inheritdoc />
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
     {
         throw new NotImplementedException();

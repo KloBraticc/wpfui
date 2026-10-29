@@ -1,4 +1,4 @@
-﻿// This Source Code Form is subject to the terms of the MIT License.
+// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -6,7 +6,7 @@
 namespace Wpf.Ui.Hardware;
 
 /// <summary>
-/// An <see cref="System.Int32"/> value whose high-order word corresponds to the rendering tier for the current thread.
+/// An <see cref="int"/> value whose high-order word corresponds to the rendering tier for the current thread.
 /// <para>Starting in the .NET Framework 4, rendering tier 1 has been redefined to only include graphics hardware that supports DirectX 9.0 or greater. Graphics hardware that supports DirectX 7 or 8 is now defined as rendering tier 0.</para>
 /// </summary>
 public enum RenderingTier
@@ -29,5 +29,5 @@ public enum RenderingTier
     /// necessary system resources have not been exhausted.
     /// This corresponds to a DirectX version that is greater than or equal to 9.0.
     /// </summary>
-    FullAcceleration = 0x2
+    FullAcceleration = 0x2,
 }
