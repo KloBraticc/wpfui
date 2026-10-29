@@ -1,4 +1,4 @@
-// This Source Code Form is subject to the terms of the MIT License.
+﻿// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
@@ -32,6 +32,24 @@ namespace Wpf.Ui.Controls;
 public class Button : System.Windows.Controls.Button, IAppearanceControl, IIconControl
 {
     /// <summary>Identifies the <see cref="Icon"/> dependency property.</summary>
+
+    public static readonly DependencyProperty IconForegroundProperty = DependencyProperty.Register(
+        nameof(IconForeground), typeof(System.Windows.Media.Brush), typeof(Button), new PropertyMetadata(null, OnIconForegroundChanged));
+
+    public System.Windows.Media.Brush? IconForeground
+    {
+        get => (System.Windows.Media.Brush?)GetValue(IconForegroundProperty);
+        set => SetValue(IconForegroundProperty, value);
+    }
+
+    private static void OnIconForegroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is Button control && control.Icon is SymbolIcon symbol)
+        {
+            symbol.SetBinding(ForegroundProperty, new Binding(nameof(IconForeground)) { Source = control });
+            symbol.SetValue(ForegroundProperty, e.NewValue);
+        }
+    }
 
     public static readonly DependencyProperty IconFilledProperty = DependencyProperty.Register(
         nameof(IconFilled), typeof(bool), typeof(Button), new PropertyMetadata(false, OnIconFilledChanged));
