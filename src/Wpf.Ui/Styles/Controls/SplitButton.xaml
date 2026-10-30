@@ -13,7 +13,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Wpf.Ui.Controls">
 
-    <Thickness x:Key="SplitButtonPadding">11,5,11,6</Thickness>
+    <Thickness x:Key="SplitButtonPadding">14,5,14,6</Thickness>
     <Thickness x:Key="SplitButtonBorderThemeThickness">1</Thickness>
     <Thickness x:Key="SplitButtonIconMargin">0,0,8,0</Thickness>
 
@@ -60,12 +60,12 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding Border.CornerRadius}">
                         <DockPanel LastChildFill="True">
-                            <Button x:Name="PART_DropDownButton" Style="{x:Null}" DockPanel.Dock="Left" Width="34" MinWidth="0" MinHeight="0" Padding="0" Margin="0" VerticalAlignment="Stretch"
+                            <Button x:Name="PART_DropDownButton" Style="{x:Null}" DockPanel.Dock="Right" Width="28" MinWidth="0" MinHeight="0" Padding="0" Margin="0" VerticalAlignment="Stretch"
                                     Background="Transparent" Foreground="{TemplateBinding Foreground}"
                                     ToolTip="{TemplateBinding DropDownToolTip}" AutomationProperties.Name="{TemplateBinding DropDownToolTip}">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="DropDownSurface" Background="Transparent" CornerRadius="{DynamicResource ControlCornerRadius}">
+                                        <Border x:Name="DropDownSurface" Background="Transparent" CornerRadius="0,4,4,0">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <ControlTemplate.Triggers>
@@ -82,7 +82,7 @@
                                     <controls:SymbolIcon.RenderTransform><RotateTransform Angle="0" /></controls:SymbolIcon.RenderTransform>
                                 </controls:SymbolIcon>
                             </Button>
-                            <Border x:Name="Divider" DockPanel.Dock="Left" Width="1" Margin="0,5" Background="{TemplateBinding Foreground}" Opacity="0.25" />
+                            <Border x:Name="Divider" DockPanel.Dock="Right" Width="1" Margin="0" Background="{TemplateBinding Foreground}" Opacity="0.3" />
                             <ContentPresenter
                             x:Name="ContentPresenter"
                             Margin="{TemplateBinding Padding}"
@@ -93,10 +93,6 @@
                         </DockPanel>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="DropDownOnRight" Value="True">
-                            <Setter TargetName="PART_DropDownButton" Property="DockPanel.Dock" Value="Right" />
-                            <Setter TargetName="Divider" Property="DockPanel.Dock" Value="Right" />
-                        </Trigger>
                         <Trigger Property="IsDropDownOpen" Value="True">
                             <Trigger.EnterActions>
                                 <BeginStoryboard HandoffBehavior="SnapshotAndReplace"><Storyboard>
