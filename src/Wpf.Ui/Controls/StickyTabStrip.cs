@@ -125,7 +125,8 @@ public sealed class StickyTabStrip
             _surface = new LinearGradientBrush(
                 new GradientStopCollection
                 {
-                    new GradientStop(color, 0),
+                    new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 0),
+                    new GradientStop(color, 0.14),
                     new GradientStop(color, 0.8),
                     new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 1),
                 },
