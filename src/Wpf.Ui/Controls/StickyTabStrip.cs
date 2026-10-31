@@ -137,9 +137,19 @@ public sealed class StickyTabStrip
         }
     }
 
+    private Color PageColor()
+    {
+        Color window = (_tabs.TryFindResource("SolidBackgroundFillColorBaseBrush") as SolidColorBrush)?.Color ?? Color.FromRgb(0x20, 0x20, 0x20);
+        if (_tabs.TryFindResource("LayerFillColorDefaultBrush") is not SolidColorBrush layer)
+            return window;
+        double amount = layer.Color.A / 255.0 * layer.Opacity;
+        byte Mix(byte over, byte under) => (byte)Math.Round(over * amount + under * (1 - amount));
+        return Color.FromRgb(Mix(layer.Color.R, window.R), Mix(layer.Color.G, window.G), Mix(layer.Color.B, window.B));
+    }
+
     private Border CreateCover()
     {
-        Color color = (_tabs.TryFindResource("SolidBackgroundFillColorBaseBrush") as SolidColorBrush)?.Color ?? Color.FromRgb(0x20, 0x20, 0x20);
+        Color color = PageColor();
         Border cover = new()
         {
             Height = _strip.ActualHeight + CoverAbove + CoverFade,
