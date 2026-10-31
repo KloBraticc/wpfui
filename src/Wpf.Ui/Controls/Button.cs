@@ -19,13 +19,9 @@ namespace Wpf.Ui.Controls;
 /// </summary>
 public class Button : System.Windows.Controls.Button, IIconControl, IAppearanceControl
 {
-    private static readonly DoubleAnimationUsingKeyFrames LayerIn = CreateLayerAnimation(1d, 0.083d);
+    private static readonly DoubleAnimationUsingKeyFrames LayerIn = CreateLayerAnimation(1d);
 
-    private static readonly DoubleAnimationUsingKeyFrames LayerInstant = CreateLayerAnimation(1d, 0d);
-
-    private static readonly DoubleAnimationUsingKeyFrames LayerHide = CreateLayerAnimation(0d, 0d);
-
-    private static readonly DoubleAnimationUsingKeyFrames LayerOut = CreateLayerAnimation(0d, 0.083d);
+    private static readonly DoubleAnimationUsingKeyFrames LayerOut = CreateLayerAnimation(0d);
 
     private Border? _hoverLayer;
 
@@ -35,15 +31,11 @@ public class Button : System.Windows.Controls.Button, IIconControl, IAppearanceC
 
     private bool _pressShown;
 
-    private static DoubleAnimationUsingKeyFrames CreateLayerAnimation(double value, double seconds)
+    private static DoubleAnimationUsingKeyFrames CreateLayerAnimation(double value)
     {
         DoubleAnimationUsingKeyFrames animation = new();
         animation.KeyFrames.Add(
-            new SplineDoubleKeyFrame(
-                value,
-                KeyTime.FromTimeSpan(TimeSpan.FromSeconds(seconds)),
-                new KeySpline(0d, 0d, 0d, 1d)
-            )
+            new LinearDoubleKeyFrame(value, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(83d)))
         );
         animation.Freeze();
         return animation;
@@ -72,15 +64,15 @@ public class Button : System.Windows.Controls.Button, IIconControl, IAppearanceC
         if (hover != _hoverShown && EnsureLayer(ref _hoverLayer, hover, MouseOverBackgroundProperty, "ControlElevationBorderBrush", 1))
         {
             _hoverShown = hover;
-            _hoverLayer!.BeginAnimation(OpacityProperty, hover ? LayerIn : IsPressed ? LayerHide : LayerOut);
+            _hoverLayer!.BeginAnimation(OpacityProperty, hover ? LayerIn : LayerOut);
         }
 
         if (IsPressed != _pressShown && EnsureLayer(ref _pressLayer, IsPressed, PressedBackgroundProperty, "ButtonPressedStrokeBrush", _hoverLayer != null ? 2 : 1))
         {
             _pressShown = IsPressed;
-            _pressLayer!.BeginAnimation(OpacityProperty, IsPressed ? LayerInstant : LayerOut);
+            _pressLayer!.BeginAnimation(OpacityProperty, IsPressed ? LayerIn : LayerOut);
             if (Appearance is Common.ControlAppearance.Secondary or Common.ControlAppearance.Transparent && Template?.FindName("ContentBorder", this) is Border content)
-                content.BeginAnimation(OpacityProperty, IsPressed ? LayerHide : LayerIn);
+                content.BeginAnimation(OpacityProperty, IsPressed ? LayerOut : LayerIn);
         }
     }
 
