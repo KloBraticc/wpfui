@@ -3,10 +3,13 @@
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
 
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Wpf.Ui.Controls.Interfaces;
 
 namespace Wpf.Ui.Controls;
@@ -16,6 +19,81 @@ namespace Wpf.Ui.Controls;
 /// </summary>
 public class Button : System.Windows.Controls.Button, IIconControl, IAppearanceControl
 {
+    private static readonly DoubleAnimationUsingKeyFrames LayerIn = CreateLayerAnimation(1d, 0.083d);
+
+    private static readonly DoubleAnimationUsingKeyFrames LayerOut = CreateLayerAnimation(0d, 0.167d);
+
+    private Border? _hoverLayer;
+
+    private Border? _pressLayer;
+
+    private bool _hoverShown;
+
+    private bool _pressShown;
+
+    private static DoubleAnimationUsingKeyFrames CreateLayerAnimation(double value, double seconds)
+    {
+        DoubleAnimationUsingKeyFrames animation = new();
+        animation.KeyFrames.Add(
+            new SplineDoubleKeyFrame(
+                value,
+                KeyTime.FromTimeSpan(TimeSpan.FromSeconds(seconds)),
+                new KeySpline(0d, 0d, 0d, 1d)
+            )
+        );
+        animation.Freeze();
+        return animation;
+    }
+
+    public override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        _hoverLayer = null;
+        _pressLayer = null;
+        _hoverShown = false;
+        _pressShown = false;
+        UpdateLayers();
+    }
+
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.Property == IsMouseOverProperty || e.Property == IsPressedProperty)
+            UpdateLayers();
+    }
+
+    private void UpdateLayers()
+    {
+        bool hover = (bool)GetValue(IsMouseOverProperty) && !IsPressed;
+        if (hover != _hoverShown && EnsureLayer(ref _hoverLayer, hover, MouseOverBackgroundProperty, "ControlElevationBorderBrush", 1))
+        {
+            _hoverShown = hover;
+            _hoverLayer!.BeginAnimation(OpacityProperty, hover ? LayerIn : LayerOut);
+        }
+
+        if (IsPressed != _pressShown && EnsureLayer(ref _pressLayer, IsPressed, PressedBackgroundProperty, "ControlStrokeColorDefaultBrush", _hoverLayer != null ? 2 : 1))
+        {
+            _pressShown = IsPressed;
+            _pressLayer!.BeginAnimation(OpacityProperty, IsPressed ? LayerIn : LayerOut);
+        }
+    }
+
+    private bool EnsureLayer(ref Border? layer, bool needed, DependencyProperty background, string borderBrushKey, int offset)
+    {
+        if (layer != null)
+            return true;
+        if (!needed || Template?.FindName("ContentBorder", this) is not Border content || VisualTreeHelper.GetParent(content) is not Panel root)
+            return false;
+
+        layer = new Border { Opacity = 0d, IsHitTestVisible = false };
+        layer.SetBinding(Border.BackgroundProperty, new Binding { Source = this, Path = new PropertyPath(background) });
+        layer.SetResourceReference(Border.BorderBrushProperty, borderBrushKey);
+        layer.SetBinding(Border.BorderThicknessProperty, new Binding { Source = this, Path = new PropertyPath(BorderThicknessProperty) });
+        layer.SetBinding(Border.CornerRadiusProperty, new Binding { Source = this, Path = new PropertyPath(Border.CornerRadiusProperty) });
+        root.Children.Insert(root.Children.IndexOf(content) + offset, layer);
+        return true;
+    }
+
     /// <summary>
     /// Property for <see cref="Icon"/>.
     /// </summary>
