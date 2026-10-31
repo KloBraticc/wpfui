@@ -23,8 +23,16 @@ public sealed class StickyTabStrip
     private readonly Panel _strip;
     private readonly TranslateTransform _pin = new();
     private Border? _cover;
-    private Border? _edge;
-    private Thickness _edgeThickness;
+    private FrameworkElement? _masked;
+    private readonly LinearGradientBrush _mask = new()
+    {
+        MappingMode = BrushMappingMode.Absolute,
+        GradientStops = new GradientStopCollection
+        {
+            new GradientStop(Colors.Transparent, 0),
+            new GradientStop(Colors.Black, 1),
+        },
+    };
     private bool _pinned;
 
     public static void Register()
@@ -96,7 +104,9 @@ public sealed class StickyTabStrip
         _tabs.Unloaded -= OnTabsUnloaded;
         _tabs.SelectionChanged -= OnSelectionChanged;
         _pin.Y = 0;
-        SetEdgeHidden(false);
+        if (_masked != null)
+            _masked.OpacityMask = null;
+        _masked = null;
         if (_cover != null && _strip.Parent is Panel host)
             host.Children.Remove(_cover);
         SetIndicators(Visibility.Visible);
@@ -129,6 +139,7 @@ public sealed class StickyTabStrip
         double offset = Math.Clamp(-top, 0, limit);
         _pin.Y = offset;
         SetPinned(offset > 0);
+        UpdateMask();
     }
 
     private void SetIndicators(Visibility visibility)
@@ -140,26 +151,17 @@ public sealed class StickyTabStrip
         }
     }
 
-    private void SetEdgeHidden(bool hidden)
+    private FrameworkElement? MaskTarget() =>
+        (_tabs.Template?.FindName("Border", _tabs) ?? _tabs.Template?.FindName("PART_SelectedContentHost", _tabs)) as FrameworkElement;
+
+    private void UpdateMask()
     {
-        if (hidden && _edge == null)
-        {
-            for (DependencyObject? parent = VisualTreeHelper.GetParent(_scroll); parent != null; parent = VisualTreeHelper.GetParent(parent))
-            {
-                if (parent is Border { BorderThickness.Top: > 0 } border)
-                {
-                    _edge = border;
-                    _edgeThickness = border.BorderThickness;
-                    border.BorderThickness = new Thickness(_edgeThickness.Left, 0, _edgeThickness.Right, _edgeThickness.Bottom);
-                    break;
-                }
-            }
-        }
-        else if (!hidden && _edge != null)
-        {
-            _edge.BorderThickness = _edgeThickness;
-            _edge = null;
-        }
+        if (_masked == null || !_scroll.IsAncestorOf(_masked))
+            return;
+        double width = Math.Max(1, _masked.ActualWidth);
+        double top = -_masked.TransformToAncestor(_scroll).Transform(new Point(0, 0)).Y + _strip.ActualHeight;
+        _mask.StartPoint = new Point(width / 2, top);
+        _mask.EndPoint = new Point(width / 2, top + CoverFade);
     }
 
     private Color PageColor()
@@ -209,7 +211,13 @@ public sealed class StickyTabStrip
             return;
         _pinned = pinned;
         SetIndicators(pinned ? Visibility.Hidden : Visibility.Visible);
-        SetEdgeHidden(pinned);
+        if (OperatingSystem.IsWindows() && MaskTarget() is FrameworkElement target)
+        {
+            _masked = pinned ? target : null;
+            target.OpacityMask = pinned ? _mask : null;
+            UpdateMask();
+            return;
+        }
         Border cover = _cover ??= CreateCover();
         cover.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(pinned ? 1 : 0, FadeDuration));
     }
