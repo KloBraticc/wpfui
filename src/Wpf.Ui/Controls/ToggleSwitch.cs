@@ -41,6 +41,9 @@ public class ToggleSwitch : System.Windows.Controls.Primitives.ToggleButton
     private TranslateTransform? _dragTransform;
     private Window? _ownerWindow;
     private bool _templateReady;
+    private bool _statesLoaded;
+    private string? _restingCheckState;
+    private string? _restingInteractionState;
     private bool _dragCandidate;
     private bool _dragging;
     private bool _completingDrag;
@@ -67,6 +70,9 @@ public class ToggleSwitch : System.Windows.Controls.Primitives.ToggleButton
     {
         CancelDrag(false, true);
         _templateReady = false;
+        _statesLoaded = false;
+        _restingCheckState = null;
+        _restingInteractionState = null;
         _track = null;
         _knobHost = null;
         _knobPosition = null;
@@ -120,12 +126,80 @@ public class ToggleSwitch : System.Windows.Controls.Primitives.ToggleButton
             suffix = "SwitchNormal";
         }
 
+        if (!_statesLoaded)
+        {
+            bool focused = IsEnabled && IsKeyboardFocused;
+            if (!useTransitions && !focused && suffix is "SwitchNormal" or "SwitchDisabled" && ApplyRestingState(prefix, suffix))
+            {
+                return;
+            }
+
+            LoadVisualStates();
+        }
+
         VisualStateManager.GoToState(this, prefix, transitions);
         VisualStateManager.GoToState(this, suffix, transitions);
         VisualStateManager.GoToState(
             this,
             IsEnabled && IsKeyboardFocused ? "KeyboardFocused" : "KeyboardUnfocused",
             transitions);
+    }
+
+    private bool ApplyRestingState(string checkState, string interactionState)
+    {
+        if (Template?.FindName("SwitchActiveTrack", this) is not UIElement activeTrack ||
+            Template.FindName("SwitchUncheckedKnob", this) is not UIElement uncheckedKnob ||
+            Template.FindName("SwitchCheckedKnob", this) is not UIElement checkedKnob ||
+            Template.FindName("SwitchVisual", this) is not UIElement visual ||
+            Template.FindName("KnobPressScale", this) is not ScaleTransform pressScale ||
+            _knobPosition == null)
+        {
+            return false;
+        }
+
+        (double active, double unchecked_, double checked_, double position, double center) = checkState switch
+        {
+            "SwitchChecked" => (1d, 0d, 1d, 20d, 9.6d),
+            "SwitchUnchecked" => (0d, 1d, 0d, 0d, 2.4d),
+            _ => (0.55d, 0.5d, 0.5d, 10d, 6d)
+        };
+        activeTrack.Opacity = active;
+        uncheckedKnob.Opacity = unchecked_;
+        checkedKnob.Opacity = checked_;
+        _knobPosition.X = position;
+        pressScale.CenterX = center;
+        visual.Opacity = interactionState == "SwitchDisabled" ? 0.2169d : 1d;
+        _restingCheckState = checkState;
+        _restingInteractionState = interactionState;
+        return true;
+    }
+
+    private void LoadVisualStates()
+    {
+        _statesLoaded = true;
+        if (TryFindResource("ToggleSwitchStateGroups") is not DataTemplate template ||
+            template.LoadContent() is not FrameworkElement holder ||
+            VisualTreeHelper.GetChildrenCount(this) == 0 ||
+            VisualTreeHelper.GetChild(this, 0) is not FrameworkElement root)
+        {
+            return;
+        }
+
+        System.Collections.IList source = VisualStateManager.GetVisualStateGroups(holder);
+        System.Collections.IList target = VisualStateManager.GetVisualStateGroups(root);
+        while (source.Count > 0)
+        {
+            object group = source[0]!;
+            source.RemoveAt(0);
+            target.Add(group);
+        }
+
+        if (_restingCheckState != null && _restingInteractionState != null)
+        {
+            VisualStateManager.GoToState(this, _restingCheckState, false);
+            VisualStateManager.GoToState(this, _restingInteractionState, false);
+            VisualStateManager.GoToState(this, "KeyboardUnfocused", false);
+        }
     }
 
     protected override void OnToggle()
