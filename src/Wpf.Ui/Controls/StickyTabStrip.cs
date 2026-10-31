@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace Wpf.Ui.Controls;
 
@@ -79,6 +80,7 @@ public sealed class StickyTabStrip
         Panel.SetZIndex(_strip, 100);
         _scroll.ScrollChanged += OnScrollChanged;
         _tabs.Unloaded += OnTabsUnloaded;
+        _tabs.SelectionChanged += OnSelectionChanged;
         Update();
     }
 
@@ -86,9 +88,26 @@ public sealed class StickyTabStrip
     {
         _scroll.ScrollChanged -= OnScrollChanged;
         _tabs.Unloaded -= OnTabsUnloaded;
+        _tabs.SelectionChanged -= OnSelectionChanged;
         _pin.Y = 0;
         _strip.Background = Brushes.Transparent;
         SetIndicators(Visibility.Visible);
+    }
+
+    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, _tabs) || !_pinned)
+            return;
+        double offset = _scroll.VerticalOffset;
+        _tabs.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => RestoreOffset(offset)));
+    }
+
+    private void RestoreOffset(double offset)
+    {
+        if (!_tabs.IsLoaded)
+            return;
+        _scroll.UpdateLayout();
+        _scroll.ScrollToVerticalOffset(Math.Min(offset, _scroll.ScrollableHeight));
     }
 
     private void OnScrollChanged(object sender, ScrollChangedEventArgs e) => Update();
