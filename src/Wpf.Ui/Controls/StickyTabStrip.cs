@@ -23,6 +23,8 @@ public sealed class StickyTabStrip
     private readonly Panel _strip;
     private readonly TranslateTransform _pin = new();
     private Border? _cover;
+    private Border? _edge;
+    private Thickness _edgeThickness;
     private bool _pinned;
 
     public static void Register()
@@ -94,6 +96,7 @@ public sealed class StickyTabStrip
         _tabs.Unloaded -= OnTabsUnloaded;
         _tabs.SelectionChanged -= OnSelectionChanged;
         _pin.Y = 0;
+        SetEdgeHidden(false);
         if (_cover != null && _strip.Parent is Panel host)
             host.Children.Remove(_cover);
         SetIndicators(Visibility.Visible);
@@ -134,6 +137,28 @@ public sealed class StickyTabStrip
         {
             if (child is TabItem item && item.Template?.FindName("SelectionIndicator", item) is UIElement indicator)
                 indicator.Visibility = visibility;
+        }
+    }
+
+    private void SetEdgeHidden(bool hidden)
+    {
+        if (hidden && _edge == null)
+        {
+            for (DependencyObject? parent = VisualTreeHelper.GetParent(_scroll); parent != null; parent = VisualTreeHelper.GetParent(parent))
+            {
+                if (parent is Border { BorderThickness.Top: > 0 } border)
+                {
+                    _edge = border;
+                    _edgeThickness = border.BorderThickness;
+                    border.BorderThickness = new Thickness(_edgeThickness.Left, 0, _edgeThickness.Right, _edgeThickness.Bottom);
+                    break;
+                }
+            }
+        }
+        else if (!hidden && _edge != null)
+        {
+            _edge.BorderThickness = _edgeThickness;
+            _edge = null;
         }
     }
 
@@ -184,6 +209,7 @@ public sealed class StickyTabStrip
             return;
         _pinned = pinned;
         SetIndicators(pinned ? Visibility.Hidden : Visibility.Visible);
+        SetEdgeHidden(pinned);
         Border cover = _cover ??= CreateCover();
         cover.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(pinned ? 1 : 0, FadeDuration));
     }
