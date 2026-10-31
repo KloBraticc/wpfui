@@ -12,13 +12,17 @@ public sealed class StickyTabStrip
 {
     private static readonly TimeSpan FadeDuration = TimeSpan.FromMilliseconds(120);
 
+    private const double CoverAbove = 14;
+    private const double CoverSide = 40;
+    private const double CoverFade = 12;
+
     private static bool _registered;
 
     private readonly TabControl _tabs;
     private readonly ScrollViewer _scroll;
     private readonly Panel _strip;
     private readonly TranslateTransform _pin = new();
-    private LinearGradientBrush? _surface;
+    private Border? _cover;
     private bool _pinned;
 
     public static void Register()
@@ -90,7 +94,8 @@ public sealed class StickyTabStrip
         _tabs.Unloaded -= OnTabsUnloaded;
         _tabs.SelectionChanged -= OnSelectionChanged;
         _pin.Y = 0;
-        _strip.Background = Brushes.Transparent;
+        if (_cover != null && _strip.Parent is Panel host)
+            host.Children.Remove(_cover);
         SetIndicators(Visibility.Visible);
     }
 
@@ -132,30 +137,44 @@ public sealed class StickyTabStrip
         }
     }
 
+    private Border CreateCover()
+    {
+        Color color = (_tabs.TryFindResource("SolidBackgroundFillColorBaseBrush") as SolidColorBrush)?.Color ?? Color.FromRgb(0x20, 0x20, 0x20);
+        Border cover = new()
+        {
+            Height = _strip.ActualHeight + CoverAbove + CoverFade,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(-CoverSide, -CoverAbove, -CoverSide, 0),
+            IsHitTestVisible = false,
+            Opacity = 0,
+            RenderTransform = _pin,
+            Background = new LinearGradientBrush(
+                new GradientStopCollection
+                {
+                    new GradientStop(color, 0),
+                    new GradientStop(color, (_strip.ActualHeight + CoverAbove) / (_strip.ActualHeight + CoverAbove + CoverFade)),
+                    new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 1),
+                },
+                90
+            ),
+        };
+        if (_strip.Parent is Panel host)
+        {
+            Panel.SetZIndex(cover, 99);
+            Grid.SetRow(cover, Grid.GetRow(_strip));
+            Grid.SetRowSpan(cover, 2);
+            host.Children.Add(cover);
+        }
+        return cover;
+    }
+
     private void SetPinned(bool pinned)
     {
         if (pinned == _pinned)
             return;
         _pinned = pinned;
         SetIndicators(pinned ? Visibility.Hidden : Visibility.Visible);
-        if (_surface == null)
-        {
-            Color color = (_tabs.TryFindResource("SolidBackgroundFillColorBaseBrush") as SolidColorBrush)?.Color ?? Color.FromRgb(0x20, 0x20, 0x20);
-            _surface = new LinearGradientBrush(
-                new GradientStopCollection
-                {
-                    new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 0),
-                    new GradientStop(color, 0.14),
-                    new GradientStop(color, 0.8),
-                    new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 1),
-                },
-                90
-            )
-            {
-                Opacity = 0,
-            };
-            _strip.Background = _surface;
-        }
-        _surface.BeginAnimation(Brush.OpacityProperty, new DoubleAnimation(pinned ? 1 : 0, FadeDuration));
+        Border cover = _cover ??= CreateCover();
+        cover.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(pinned ? 1 : 0, FadeDuration));
     }
 }
