@@ -24,6 +24,8 @@
 
     <!--  Colors  -->
 
+    <Color x:Key="ButtonPressedTextColor">#CCFFFFFF</Color>
+    <SolidColorBrush x:Key="ButtonPressedStrokeBrush" Color="#12FFFFFF" />
     <Color x:Key="TextFillColorPrimary">#FFFFFF</Color>
     <Color x:Key="TextFillColorSecondary">#C5FFFFFF</Color>
     <Color x:Key="TextFillColorTertiary">#87FFFFFF</Color>
