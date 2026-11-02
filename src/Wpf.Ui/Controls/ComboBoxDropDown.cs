@@ -72,6 +72,7 @@ public static class ComboBoxDropDown
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnItemPressed), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(OnItemReleased), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.MouseLeaveEvent, new MouseEventHandler(OnItemLeft), true);
+        EventManager.RegisterClassHandler(typeof(ComboBox), Mouse.LostMouseCaptureEvent, new MouseEventHandler(OnComboBoxCaptureLost), true);
         EventManager.RegisterClassHandler(typeof(ScrollViewer), ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnScrollChanged), true);
     }
 
@@ -90,8 +91,22 @@ public static class ComboBoxDropDown
         return spline;
     }
 
+    private static void OnComboBoxCaptureLost(object sender, MouseEventArgs e) => QueueChevronReset(sender);
+
+    private static void QueueChevronReset(object sender)
+    {
+        if (!Motion || sender is not ComboBox comboBox)
+            return;
+        comboBox.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+        {
+            if (!comboBox.IsDropDownOpen && Part<FrameworkElement>(comboBox, ChevronPartName) is FrameworkElement chevron && ChevronTransform(chevron).Y != 0)
+                PlayChevronRelease(comboBox);
+        }));
+    }
+
     private static void OnComboBoxReleased(object sender, MouseButtonEventArgs e)
     {
+        QueueChevronReset(sender);
         if (sender is not ComboBox comboBox || !(bool)comboBox.GetValue(SuppressReleaseProperty))
             return;
         comboBox.SetValue(SuppressReleaseProperty, false);
