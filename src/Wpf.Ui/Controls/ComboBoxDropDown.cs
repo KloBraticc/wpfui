@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -67,6 +67,7 @@ public static class ComboBoxDropDown
 
     static ComboBoxDropDown()
     {
+        EventManager.RegisterClassHandler(typeof(ComboBox), UIElement.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnComboBoxPressed), true);
         EventManager.RegisterClassHandler(typeof(ComboBox), UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(OnComboBoxReleased), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnItemPressed), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(OnItemReleased), true);
@@ -195,7 +196,6 @@ public static class ComboBoxDropDown
         {
             comboBox.SetValue(IsHookedProperty, true);
             comboBox.DropDownClosed += OnDropDownClosed;
-            comboBox.PreviewMouseLeftButtonDown += OnComboBoxPressed;
             comboBox.Unloaded += OnComboBoxUnloaded;
         }
         comboBox.SetValue(SuppressReleaseProperty, Mouse.LeftButton == MouseButtonState.Pressed);
@@ -212,7 +212,6 @@ public static class ComboBoxDropDown
         if (sender is not ComboBox comboBox)
             return;
         comboBox.DropDownClosed -= OnDropDownClosed;
-        comboBox.PreviewMouseLeftButtonDown -= OnComboBoxPressed;
         comboBox.Unloaded -= OnComboBoxUnloaded;
         comboBox.SetValue(IsHookedProperty, false);
     }
