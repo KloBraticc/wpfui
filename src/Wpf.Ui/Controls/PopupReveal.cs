@@ -89,6 +89,16 @@ namespace Wpf.Ui.Controls
 
         public static bool GetCloseTarget(DependencyObject element) => (bool)element.GetValue(CloseTargetProperty);
 
+        public static readonly DependencyProperty CloseFadeDelayProperty = DependencyProperty.RegisterAttached(
+            "CloseFadeDelay",
+            typeof(TimeSpan),
+            typeof(PopupReveal),
+            new PropertyMetadata(TimeSpan.Zero));
+
+        public static void SetCloseFadeDelay(DependencyObject element, TimeSpan value) => element.SetValue(CloseFadeDelayProperty, value);
+
+        public static TimeSpan GetCloseFadeDelay(DependencyObject element) => (TimeSpan)element.GetValue(CloseFadeDelayProperty);
+
         public static void SetCloseDuration(DependencyObject element, Duration value) => element.SetValue(CloseDurationProperty, value);
 
         public static Duration GetCloseDuration(DependencyObject element) => (Duration)element.GetValue(CloseDurationProperty);
@@ -149,14 +159,20 @@ namespace Wpf.Ui.Controls
 
             child.IsHitTestVisible = false;
 
-            DoubleAnimation fade = new()
+            TimeSpan fadeDelay = GetCloseFadeDelay(popup);
+            Duration closeDuration = GetCloseDuration(popup);
+            bool delayed = fadeDelay > TimeSpan.Zero && closeDuration.HasTimeSpan && closeDuration.TimeSpan > fadeDelay;
+            DoubleAnimationUsingKeyFrames fade = new() { Duration = closeDuration, FillBehavior = FillBehavior.HoldEnd };
+            if (delayed)
             {
-                From = child.Opacity,
-                To = 0d,
-                Duration = GetCloseDuration(popup),
-                EasingFunction = FadeEase,
-                FillBehavior = FillBehavior.HoldEnd
-            };
+                fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(child.Opacity, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+                fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(child.Opacity, KeyTime.FromTimeSpan(fadeDelay)));
+                fade.KeyFrames.Add(new LinearDoubleKeyFrame(0d, KeyTime.FromTimeSpan(closeDuration.TimeSpan)));
+            }
+            else
+            {
+                fade.KeyFrames.Add(new EasingDoubleKeyFrame(0d, KeyTime.FromPercent(1), FadeEase));
+            }
 
             fade.Completed += (_, _) =>
             {
