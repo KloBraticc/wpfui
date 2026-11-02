@@ -19,10 +19,10 @@
     <Thickness x:Key="ComboBoxPadding">12,5,0,7</Thickness>
     <Thickness x:Key="ComboBoxBorderThemeThickness">1,1,1,1</Thickness>
     <Thickness x:Key="ComboBoxAccentBorderThemeThickness">0,0,0,1</Thickness>
-    <Thickness x:Key="ComboBoxChevronMargin">0,0,4,0</Thickness>
+    <Thickness x:Key="ComboBoxChevronMargin">8,0,10,0</Thickness>
     <Thickness x:Key="ComboBoxItemMargin">5,2,5,2</Thickness>
     <Thickness x:Key="ComboBoxItemContentMargin">11,5,11,7</Thickness>
-    <system:Double x:Key="ComboBoxChevronSize">14.0</system:Double>
+    <system:Double x:Key="ComboBoxChevronSize">11.0</system:Double>
     <system:Double x:Key="ComboBoxMinHeight">32.0</system:Double>
     <system:Double x:Key="ComboBoxPopupMinHeight">46.0</system:Double>
     <system:Double x:Key="ComboBoxPopupMaxHeight">560.0</system:Double>
@@ -315,7 +315,7 @@
                                             Background="Transparent"
                                             RenderTransformOrigin="0.5, 0.5">
                                             <Grid.RenderTransform>
-                                                <RotateTransform Angle="0" />
+                                                <TranslateTransform Y="0" />
                                             </Grid.RenderTransform>
                                             <controls:SymbolIcon
                                                 x:Name="ChevronIcon"
@@ -324,7 +324,11 @@
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
                                                 FontSize="{StaticResource ComboBoxChevronSize}"
+                                                RenderTransformOrigin="0.5, 0.5"
                                                 Symbol="ChevronDown24">
+                                                <controls:SymbolIcon.RenderTransform>
+                                                    <RotateTransform Angle="0" />
+                                                </controls:SymbolIcon.RenderTransform>
                                                 <controls:SymbolIcon.Foreground>
                                                     <SolidColorBrush Color="{DynamicResource TextFillColorSecondary}" />
                                                 </controls:SymbolIcon.Foreground>
@@ -495,14 +499,11 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation
-                                            Storyboard.TargetName="ChevronGrid"
-                                            Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
+                                            Storyboard.TargetName="ChevronIcon"
+                                            Storyboard.TargetProperty="(controls:SymbolIcon.RenderTransform).(RotateTransform.Angle)"
+                                            From="0"
                                             To="180"
-                                            Duration="{StaticResource ComboBoxChevronDuration}">
-                                            <DoubleAnimation.EasingFunction>
-                                                <QuarticEase EasingMode="EaseOut" />
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
+                                            Duration="00:00:00.167" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -510,14 +511,11 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation
-                                            Storyboard.TargetName="ChevronGrid"
-                                            Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
+                                            Storyboard.TargetName="ChevronIcon"
+                                            Storyboard.TargetProperty="(controls:SymbolIcon.RenderTransform).(RotateTransform.Angle)"
+                                            From="180"
                                             To="0"
-                                            Duration="{StaticResource ComboBoxChevronDuration}">
-                                            <DoubleAnimation.EasingFunction>
-                                                <QuarticEase EasingMode="EaseOut" />
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
+                                            Duration="00:00:00.167" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>

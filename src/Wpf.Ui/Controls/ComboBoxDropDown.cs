@@ -15,7 +15,11 @@ public static class ComboBoxDropDown
 
     private const string FaceplatePartName = "PART_ContentPresenter";
 
+    private const string ChevronPartName = "ChevronGrid";
+
     private const double ClosedRatio = 0.5;
+
+    private const double ChevronVisualSize = 48;
 
     private static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(250);
 
@@ -26,6 +30,12 @@ public static class ComboBoxDropDown
     private static readonly TimeSpan OpacityChangeBeginTime = CloseDuration - OpacityChangeDuration;
 
     private static readonly KeySpline SplitSpline = Spline(0, 0, 0, 1);
+
+    private static readonly KeySpline ChevronPressSpline = Spline(0.167, 0.167, 0.65, 1);
+
+    private static readonly KeySpline ChevronReboundSpline = Spline(0.55, 0, 0.75, 1);
+
+    private static readonly KeySpline ChevronSettleSpline = Spline(0.35, 0, 0, 1);
 
     public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.RegisterAttached(
         "IsEnabled",
@@ -106,6 +116,8 @@ public static class ComboBoxDropDown
         }
     }
 
+    private static readonly bool Motion = !Wpf.Ui.Animations.PortableRenderer.IsActive;
+
     private static ComboBox? OwnerOf(Popup popup) => popup.TemplatedParent as ComboBox;
 
     private static T? Part<T>(ComboBox comboBox, string name)
@@ -135,10 +147,23 @@ public static class ComboBoxDropDown
 
     private static CustomPopupPlacement[] PlaceFor(Popup popup, Size popupSize, Size targetSize)
     {
+        try
+        {
+            return PlaceCore(popup, popupSize, targetSize);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            System.Diagnostics.Debug.WriteLine("ComboBoxDropDown: " + ex.Message);
+            return new[] { new CustomPopupPlacement(new Point(0, targetSize.Height), PopupPrimaryAxis.Vertical) };
+        }
+    }
+
+    private static CustomPopupPlacement[] PlaceCore(Popup popup, Size popupSize, Size targetSize)
+    {
         ComboBox? owner = OwnerOf(popup);
         FrameworkElement? part = owner == null ? null : Part<FrameworkElement>(owner, DropDownPartName);
         Thickness margin = part?.Margin ?? default;
-        if (owner != null && part != null && TryGetSelectedCenter(owner, part, out double center))
+        if (Motion && owner != null && part != null && TryGetSelectedCenter(owner, part, out double center))
         {
             double y = targetSize.Height / 2 - margin.Top - center;
             return new[] { new CustomPopupPlacement(new Point(-margin.Left, y), PopupPrimaryAxis.None) };
@@ -152,18 +177,34 @@ public static class ComboBoxDropDown
 
     private static void OnPopupOpened(object? sender, EventArgs e)
     {
+        try
+        {
+            HandlePopupOpened(sender);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            System.Diagnostics.Debug.WriteLine("ComboBoxDropDown: " + ex.Message);
+        }
+    }
+
+    private static void HandlePopupOpened(object? sender)
+    {
         if (sender is not Popup popup || OwnerOf(popup) is not ComboBox comboBox)
             return;
         if (!(bool)comboBox.GetValue(IsHookedProperty))
         {
             comboBox.SetValue(IsHookedProperty, true);
             comboBox.DropDownClosed += OnDropDownClosed;
+            comboBox.PreviewMouseLeftButtonDown += OnComboBoxPressed;
             comboBox.Unloaded += OnComboBoxUnloaded;
         }
         comboBox.SetValue(SuppressReleaseProperty, Mouse.LeftButton == MouseButtonState.Pressed);
+        if (!Motion)
+            return;
+        PlayChevronRelease(comboBox);
         AnimateFaceplate(comboBox, opening: true);
         if (Part<FrameworkElement>(comboBox, DropDownPartName) is FrameworkElement dropDown)
-            dropDown.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => Split(comboBox, dropDown, opening: true)));
+            dropDown.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => SafeSplit(comboBox, dropDown, opening: true)));
     }
 
     private static void OnComboBoxUnloaded(object sender, RoutedEventArgs e)
@@ -171,6 +212,7 @@ public static class ComboBoxDropDown
         if (sender is not ComboBox comboBox)
             return;
         comboBox.DropDownClosed -= OnDropDownClosed;
+        comboBox.PreviewMouseLeftButtonDown -= OnComboBoxPressed;
         comboBox.Unloaded -= OnComboBoxUnloaded;
         comboBox.SetValue(IsHookedProperty, false);
     }
@@ -179,9 +221,44 @@ public static class ComboBoxDropDown
     {
         if (sender is not ComboBox comboBox)
             return;
+        ClearPressedItems(comboBox);
+        if (!Motion)
+            return;
         AnimateFaceplate(comboBox, opening: false);
         if (Part<FrameworkElement>(comboBox, DropDownPartName) is FrameworkElement dropDown)
-            Split(comboBox, dropDown, opening: false);
+            SafeSplit(comboBox, dropDown, opening: false);
+    }
+
+    private static void OnComboBoxPressed(object sender, MouseButtonEventArgs e)
+    {
+        if (!Motion || sender is not ComboBox comboBox || comboBox.IsDropDownOpen || Part<FrameworkElement>(comboBox, ChevronPartName) is not FrameworkElement chevron)
+            return;
+        TranslateTransform translate = ChevronTransform(chevron);
+        DoubleAnimationUsingKeyFrames press = new() { FillBehavior = FillBehavior.HoldEnd };
+        press.KeyFrames.Add(new SplineDoubleKeyFrame(7.5 / ChevronVisualSize * chevron.ActualHeight, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150.8)), ChevronPressSpline));
+        translate.BeginAnimation(TranslateTransform.YProperty, press);
+    }
+
+    private static void PlayChevronRelease(ComboBox comboBox)
+    {
+        if (Part<FrameworkElement>(comboBox, ChevronPartName) is not FrameworkElement chevron)
+            return;
+        TranslateTransform translate = ChevronTransform(chevron);
+        double height = chevron.ActualHeight;
+        DoubleAnimationUsingKeyFrames release = new() { FillBehavior = FillBehavior.Stop };
+        release.KeyFrames.Add(new DiscreteDoubleKeyFrame(translate.Y, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        release.KeyFrames.Add(new SplineDoubleKeyFrame(-3 / ChevronVisualSize * height, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(83.3)), ChevronReboundSpline));
+        release.KeyFrames.Add(new SplineDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(300)), ChevronSettleSpline));
+        translate.BeginAnimation(TranslateTransform.YProperty, release);
+    }
+
+    private static TranslateTransform ChevronTransform(FrameworkElement chevron)
+    {
+        if (chevron.RenderTransform is TranslateTransform current && !current.IsFrozen)
+            return current;
+        TranslateTransform owned = new();
+        chevron.RenderTransform = owned;
+        return owned;
     }
 
     private static void AnimateFaceplate(ComboBox comboBox, bool opening)
@@ -200,6 +277,28 @@ public static class ComboBoxDropDown
             animation.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(CloseDuration)));
         }
         faceplate.BeginAnimation(UIElement.OpacityProperty, animation);
+    }
+
+    private static void ClearPressedItems(ComboBox comboBox)
+    {
+        for (int index = 0; index < comboBox.Items.Count; index++)
+        {
+            if (comboBox.ItemContainerGenerator.ContainerFromIndex(index) is DependencyObject container && GetIsItemPressed(container))
+                SetIsItemPressed(container, false);
+        }
+    }
+
+    private static void SafeSplit(ComboBox comboBox, FrameworkElement dropDown, bool opening)
+    {
+        try
+        {
+            Split(comboBox, dropDown, opening);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            dropDown.Clip = null;
+            System.Diagnostics.Debug.WriteLine("ComboBoxDropDown: " + ex.Message);
+        }
     }
 
     private static void Split(ComboBox comboBox, FrameworkElement dropDown, bool opening)
