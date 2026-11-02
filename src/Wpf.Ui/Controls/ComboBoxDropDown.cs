@@ -230,7 +230,7 @@ public static class ComboBoxDropDown
     {
         if (e.VerticalChange == 0 && e.HorizontalChange == 0 || _openComboBox is null || !_openComboBox.TryGetTarget(out ComboBox? comboBox))
             return;
-        if (!comboBox.IsDropDownOpen || sender is not ScrollViewer viewer || !comboBox.IsDescendantOf(viewer))
+        if (!comboBox.IsDropDownOpen || sender is not ScrollViewer viewer || !ReferenceEquals(e.OriginalSource, viewer) || !comboBox.IsDescendantOf(viewer))
             return;
         try
         {
