@@ -282,6 +282,11 @@ namespace Wpf.Ui.Controls
                 }
             }
 
+            private bool ScrollsByItem =>
+                _sv.CanContentScroll
+                && !(_sv.Content is VirtualizingPanel content && VirtualizingPanel.GetScrollUnit(content) == ScrollUnit.Pixel)
+                && !(_sv.Content is ItemsPresenter presenter && VisualTreeHelper.GetChildrenCount(presenter) > 0 && VisualTreeHelper.GetChild(presenter, 0) is VirtualizingPanel inner && VirtualizingPanel.GetScrollUnit(inner) == ScrollUnit.Pixel);
+
             public void Wheel(int delta, bool enhancedMotion)
             {
                 if (!enhancedMotion)
@@ -293,7 +298,7 @@ namespace Wpf.Ui.Controls
                         _transform.Y = 0;
                         _appliedOvershoot = 0;
                     }
-                    double wheelUnit = _sv.CanContentScroll
+                    double wheelUnit = ScrollsByItem
                         ? Math.Max(1, SystemParameters.WheelScrollLines)
                         : WheelStepPixels;
                     _target = Math.Clamp(_target - delta / 120d * wheelUnit, 0, _sv.ScrollableHeight);
@@ -308,13 +313,13 @@ namespace Wpf.Ui.Controls
                     _current = _target;
                 }
 
-                double unit = _sv.CanContentScroll
+                double unit = ScrollsByItem
                     ? Math.Max(1, SystemParameters.WheelScrollLines)
                     : WheelStepPixels;
                 double step = delta / 120d * unit;
                 double proposed = _target - step;
                 double max = _sv.ScrollableHeight;
-                double restEps = _sv.CanContentScroll ? 0.05 : 1.0;
+                double restEps = ScrollsByItem ? 0.05 : 1.0;
 
                 if (proposed < 0)
                 {
