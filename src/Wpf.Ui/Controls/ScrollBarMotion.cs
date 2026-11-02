@@ -10,10 +10,10 @@ namespace Wpf.Ui.Controls;
 
 public static class ScrollBarMotion
 {
-    private const double RestSize = 4;
-    private const double ScrollSize = 6;
-    private const double ExpandedSize = 8;
-    private const double RestThumbOpacity = 0.7;
+    private const double RestSize = 2;
+    private const double ScrollSize = 2;
+    private const double ExpandedSize = 6;
+    private const double RestThumbOpacity = 1;
     private const int SettleMilliseconds = 600;
     private const int LoadQuietMilliseconds = 300;
     private const int LingerMilliseconds = 400;
