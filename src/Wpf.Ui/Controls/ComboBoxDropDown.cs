@@ -183,8 +183,7 @@ public static class ComboBoxDropDown
     {
         if (sender is not ComboBox comboBox || comboBox.IsDropDownOpen || Part<FrameworkElement>(comboBox, ChevronPartName) is not FrameworkElement chevron)
             return;
-        if (chevron.RenderTransform is not TranslateTransform translate)
-            return;
+        TranslateTransform translate = ChevronTransform(chevron);
         double depth = 7.5 / ChevronVisualSize * chevron.ActualHeight;
         DoubleAnimationUsingKeyFrames press = new() { FillBehavior = FillBehavior.HoldEnd };
         press.KeyFrames.Add(new SplineDoubleKeyFrame(depth, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150.8)), ChevronPressSpline));
@@ -193,14 +192,24 @@ public static class ComboBoxDropDown
 
     private static void PlayChevronRelease(ComboBox comboBox)
     {
-        if (Part<FrameworkElement>(comboBox, ChevronPartName) is not FrameworkElement chevron || chevron.RenderTransform is not TranslateTransform translate)
+        if (Part<FrameworkElement>(comboBox, ChevronPartName) is not FrameworkElement chevron)
             return;
+        TranslateTransform translate = ChevronTransform(chevron);
         double height = chevron.ActualHeight;
         DoubleAnimationUsingKeyFrames release = new() { FillBehavior = FillBehavior.Stop };
         release.KeyFrames.Add(new DiscreteDoubleKeyFrame(translate.Y, KeyTime.FromTimeSpan(TimeSpan.Zero)));
         release.KeyFrames.Add(new SplineDoubleKeyFrame(-3 / ChevronVisualSize * height, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(83.3)), ChevronReboundSpline));
         release.KeyFrames.Add(new SplineDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(300)), ChevronSettleSpline));
         translate.BeginAnimation(TranslateTransform.YProperty, release);
+    }
+
+    private static TranslateTransform ChevronTransform(FrameworkElement chevron)
+    {
+        if (chevron.RenderTransform is TranslateTransform current && !current.IsFrozen)
+            return current;
+        TranslateTransform owned = new();
+        chevron.RenderTransform = owned;
+        return owned;
     }
 
     private static void AnimateFaceplate(ComboBox comboBox, bool opening)
