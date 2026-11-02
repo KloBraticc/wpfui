@@ -192,6 +192,15 @@ public static class ComboBoxDropDown
         };
     }
 
+    private static void Reposition(Popup popup)
+    {
+        if (!popup.IsOpen)
+            return;
+        double offset = popup.HorizontalOffset;
+        popup.HorizontalOffset = offset + 0.01;
+        popup.HorizontalOffset = offset;
+    }
+
     private static void OnPopupOpened(object? sender, EventArgs e)
     {
         try
@@ -218,6 +227,7 @@ public static class ComboBoxDropDown
         comboBox.SetValue(SuppressReleaseProperty, Mouse.LeftButton == MouseButtonState.Pressed);
         if (!Motion)
             return;
+        popup.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => Reposition(popup)));
         PlayChevronRelease(comboBox);
         AnimateFaceplate(comboBox, opening: true);
         if (Part<FrameworkElement>(comboBox, DropDownPartName) is FrameworkElement dropDown)
@@ -242,9 +252,7 @@ public static class ComboBoxDropDown
             }
             if (comboBox.Template?.FindName("Popup", comboBox) is Popup popup)
             {
-                double offset = popup.HorizontalOffset;
-                popup.HorizontalOffset = offset + 0.01;
-                popup.HorizontalOffset = offset;
+                Reposition(popup);
             }
         }
         catch (InvalidOperationException)
