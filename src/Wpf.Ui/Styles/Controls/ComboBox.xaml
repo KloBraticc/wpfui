@@ -19,10 +19,10 @@
     <Thickness x:Key="ComboBoxPadding">12,5,0,7</Thickness>
     <Thickness x:Key="ComboBoxBorderThemeThickness">1,1,1,1</Thickness>
     <Thickness x:Key="ComboBoxAccentBorderThemeThickness">0,0,0,1</Thickness>
-    <Thickness x:Key="ComboBoxChevronMargin">0,0,14,0</Thickness>
+    <Thickness x:Key="ComboBoxChevronMargin">0,0,4,0</Thickness>
     <Thickness x:Key="ComboBoxItemMargin">5,2,5,2</Thickness>
     <Thickness x:Key="ComboBoxItemContentMargin">11,5,11,7</Thickness>
-    <system:Double x:Key="ComboBoxChevronSize">12.0</system:Double>
+    <system:Double x:Key="ComboBoxChevronSize">14.0</system:Double>
     <system:Double x:Key="ComboBoxMinHeight">32.0</system:Double>
     <system:Double x:Key="ComboBoxPopupMinHeight">46.0</system:Double>
     <system:Double x:Key="ComboBoxPopupMaxHeight">560.0</system:Double>
@@ -315,7 +315,7 @@
                                             Background="Transparent"
                                             RenderTransformOrigin="0.5, 0.5">
                                             <Grid.RenderTransform>
-                                                <TranslateTransform Y="0" />
+                                                <RotateTransform Angle="0" />
                                             </Grid.RenderTransform>
                                             <controls:SymbolIcon
                                                 x:Name="ChevronIcon"
@@ -339,7 +339,7 @@
                                             Name="ToggleButton"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"
-                                            ClickMode="Press"
+                                            ClickMode="Release"
                                             Focusable="False"
                                             Foreground="{TemplateBinding Foreground}"
                                             IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
@@ -489,6 +489,38 @@
                             <Setter TargetName="DropDownShadow" Property="Effect" Value="{x:Null}" />
                             <Setter TargetName="DropDownShadow" Property="controls:PortableShadows.Layered" Value="True" />
                             <Setter TargetName="DropDownBorder" Property="Margin" Value="16,16,16,24" />
+                        </Trigger>
+                        <Trigger Property="IsDropDownOpen" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ChevronGrid"
+                                            Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
+                                            To="180"
+                                            Duration="{StaticResource ComboBoxChevronDuration}">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuarticEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="ChevronGrid"
+                                            Storyboard.TargetProperty="(Grid.RenderTransform).(RotateTransform.Angle)"
+                                            To="0"
+                                            Duration="{StaticResource ComboBoxChevronDuration}">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuarticEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="HasItems" Value="False">
                             <Setter TargetName="DropDownBorder" Property="MinHeight" Value="{StaticResource ComboBoxPopupMinHeight}" />
