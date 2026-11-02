@@ -58,8 +58,16 @@ public static class ComboBoxDropDown
         new PropertyMetadata(false)
     );
 
+    private static readonly DependencyProperty SuppressReleaseProperty = DependencyProperty.RegisterAttached(
+        "SuppressRelease",
+        typeof(bool),
+        typeof(ComboBoxDropDown),
+        new PropertyMetadata(false)
+    );
+
     static ComboBoxDropDown()
     {
+        EventManager.RegisterClassHandler(typeof(ComboBox), UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(OnComboBoxReleased), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnItemPressed), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(OnItemReleased), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.MouseLeaveEvent, new MouseEventHandler(OnItemLeft), true);
@@ -78,6 +86,15 @@ public static class ComboBoxDropDown
         KeySpline spline = new(x1, y1, x2, y2);
         spline.Freeze();
         return spline;
+    }
+
+    private static void OnComboBoxReleased(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not ComboBox comboBox || !(bool)comboBox.GetValue(SuppressReleaseProperty))
+            return;
+        comboBox.SetValue(SuppressReleaseProperty, false);
+        if (comboBox.IsDropDownOpen)
+            e.Handled = true;
     }
 
     private static void OnItemPressed(object sender, MouseButtonEventArgs e) => SetIsItemPressed((DependencyObject)sender, true);
@@ -154,6 +171,7 @@ public static class ComboBoxDropDown
             comboBox.PreviewMouseLeftButtonDown += OnComboBoxPressed;
             comboBox.Unloaded += OnComboBoxUnloaded;
         }
+        comboBox.SetValue(SuppressReleaseProperty, Mouse.LeftButton == MouseButtonState.Pressed);
         PlayChevronRelease(comboBox);
         AnimateFaceplate(comboBox, opening: true);
         if (Part<FrameworkElement>(comboBox, DropDownPartName) is FrameworkElement dropDown)
