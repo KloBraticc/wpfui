@@ -72,6 +72,7 @@ public static class ComboBoxDropDown
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnItemPressed), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(OnItemReleased), true);
         EventManager.RegisterClassHandler(typeof(ComboBoxItem), UIElement.MouseLeaveEvent, new MouseEventHandler(OnItemLeft), true);
+        EventManager.RegisterClassHandler(typeof(ScrollViewer), ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnScrollChanged), true);
     }
 
     public static void SetIsEnabled(DependencyObject element, bool value) => element.SetValue(IsEnabledProperty, value);
@@ -198,6 +199,7 @@ public static class ComboBoxDropDown
             comboBox.DropDownClosed += OnDropDownClosed;
             comboBox.Unloaded += OnComboBoxUnloaded;
         }
+        _openComboBox = new WeakReference<ComboBox>(comboBox);
         comboBox.SetValue(SuppressReleaseProperty, Mouse.LeftButton == MouseButtonState.Pressed);
         if (!Motion)
             return;
@@ -207,10 +209,40 @@ public static class ComboBoxDropDown
             dropDown.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => SafeSplit(comboBox, dropDown, opening: true)));
     }
 
+    private static WeakReference<ComboBox>? _openComboBox;
+
+    private static void OnScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (e.VerticalChange == 0 && e.HorizontalChange == 0 || _openComboBox is null || !_openComboBox.TryGetTarget(out ComboBox? comboBox))
+            return;
+        if (!comboBox.IsDropDownOpen || sender is not ScrollViewer viewer || !comboBox.IsDescendantOf(viewer))
+            return;
+        try
+        {
+            Rect bounds = comboBox.TransformToAncestor(viewer).TransformBounds(new Rect(comboBox.RenderSize));
+            if (bounds.Bottom < 0 || bounds.Top > viewer.ActualHeight || bounds.Right < 0 || bounds.Left > viewer.ActualWidth)
+            {
+                comboBox.IsDropDownOpen = false;
+                return;
+            }
+            if (comboBox.Template?.FindName("Popup", comboBox) is Popup popup)
+            {
+                double offset = popup.HorizontalOffset;
+                popup.HorizontalOffset = offset + 0.01;
+                popup.HorizontalOffset = offset;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            comboBox.IsDropDownOpen = false;
+        }
+    }
+
     private static void OnComboBoxUnloaded(object sender, RoutedEventArgs e)
     {
         if (sender is not ComboBox comboBox)
             return;
+        comboBox.IsDropDownOpen = false;
         comboBox.DropDownClosed -= OnDropDownClosed;
         comboBox.Unloaded -= OnComboBoxUnloaded;
         comboBox.SetValue(IsHookedProperty, false);
