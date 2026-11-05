@@ -140,8 +140,7 @@ public static class ComboBoxDropDown
     private static T? Part<T>(ComboBox comboBox, string name)
         where T : class => comboBox.Template?.FindName(name, comboBox) as T;
 
-    private static bool OpensBelow(ComboBox comboBox) =>
-        ComboBoxSearch.GetSearchVisibility(comboBox) == Visibility.Visible || comboBox.SelectedIndex < 0;
+    private static bool OpensBelow(ComboBox comboBox) => comboBox.SelectedIndex < 0;
 
     private static FrameworkElement? SelectedContainer(ComboBox comboBox) =>
         comboBox.SelectedIndex < 0 ? null : comboBox.ItemContainerGenerator.ContainerFromIndex(comboBox.SelectedIndex) as FrameworkElement;
@@ -180,16 +179,24 @@ public static class ComboBoxDropDown
         ComboBox? owner = OwnerOf(popup);
         FrameworkElement? part = owner == null ? null : Part<FrameworkElement>(owner, DropDownPartName);
         Thickness margin = part?.Margin ?? default;
+        double top = PartTop(popup, part, margin.Top);
         if (Motion && owner != null && part != null && TryGetSelectedCenter(owner, part, out double center))
         {
-            double y = targetSize.Height / 2 - margin.Top - center;
+            double y = targetSize.Height / 2 - top - center;
             return new[] { new CustomPopupPlacement(new Point(-margin.Left, y), PopupPrimaryAxis.None) };
         }
         return new[]
         {
-            new CustomPopupPlacement(new Point(-margin.Left, targetSize.Height - margin.Top), PopupPrimaryAxis.Vertical),
+            new CustomPopupPlacement(new Point(-margin.Left, targetSize.Height - top), PopupPrimaryAxis.Vertical),
             new CustomPopupPlacement(new Point(-margin.Left, -popupSize.Height + margin.Bottom), PopupPrimaryAxis.Vertical),
         };
+    }
+
+    private static double PartTop(Popup popup, FrameworkElement? part, double fallback)
+    {
+        if (part == null || popup.Child is not UIElement root || !part.IsDescendantOf(root))
+            return fallback;
+        return part.TranslatePoint(new Point(0, 0), root).Y;
     }
 
     private static void Reposition(Popup popup)

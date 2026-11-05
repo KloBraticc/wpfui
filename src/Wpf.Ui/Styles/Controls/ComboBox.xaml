@@ -384,7 +384,29 @@
                                     StaysOpen="False"
                                     VerticalOffset="0">
                                     <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Border
+                                        Grid.Row="0"
+                                        Margin="12,0,12,6"
+                                        Padding="4"
+                                        BorderBrush="{DynamicResource SurfaceStrokeColorFlyoutBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{DynamicResource PopupCornerRadius}"
+                                        Visibility="{Binding Path=(controls:ComboBoxSearch.SearchVisibility), RelativeSource={RelativeSource TemplatedParent}}">
+                                        <Border.Background>
+                                            <SolidColorBrush Color="{DynamicResource ComboBoxPopupAcrylicBackground}" />
+                                        </Border.Background>
+                                        <controls:TextBox
+                                            x:Name="PART_Search"
+                                            ClearButtonEnabled="True"
+                                            Icon="Search24"
+                                            PlaceholderText="{Binding Path=(controls:ComboBoxSearch.Placeholder), RelativeSource={RelativeSource TemplatedParent}}" />
+                                    </Border>
                                     <Grid
+                                        Grid.Row="1"
                                         x:Name="DropDownBorder"
                                         MinWidth="{Binding ActualWidth, ElementName=ContentBorder}"
                                         MaxHeight="{StaticResource ComboBoxPopupMaxHeight}"
@@ -417,20 +439,7 @@
                                             </Border.Background>
                                             <Border x:Name="DropDownContent" BorderThickness="0" ClipToBounds="True" CornerRadius="{DynamicResource PopupCornerRadius}" Padding="0">
                                               <Grid>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="*" />
-                                                </Grid.RowDefinitions>
-                                                <controls:TextBox
-                                                    x:Name="PART_Search"
-                                                    Grid.Row="0"
-                                                    Margin="5,3,5,3"
-                                                    ClearButtonEnabled="True"
-                                                    Icon="Search24"
-                                                    PlaceholderText="{Binding Path=(controls:ComboBoxSearch.Placeholder), RelativeSource={RelativeSource TemplatedParent}}"
-                                                    Visibility="{Binding Path=(controls:ComboBoxSearch.SearchVisibility), RelativeSource={RelativeSource TemplatedParent}}" />
                                                 <controls:DynamicScrollViewer
-                                                    Grid.Row="1"
                                                     MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                                     Margin="0"
                                                     CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
