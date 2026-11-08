@@ -18,7 +18,7 @@
                 <ControlTemplate TargetType="{x:Type controls:SelectorBarItem}">
                     <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
                         <Grid>
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                            <StackPanel x:Name="ContentPanel" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
                                 <controls:SymbolIcon x:Name="IconElement" Margin="0,0,7,0" VerticalAlignment="Center" FontSize="15" Symbol="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
                                 <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
                             </StackPanel>
@@ -35,6 +35,16 @@
                             <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
+                        <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType={x:Type controls:SelectorBar}}}" Value="Vertical">
+                            <Setter TargetName="ContentPanel" Property="HorizontalAlignment" Value="Left" />
+                            <Setter TargetName="Pill" Property="Width" Value="3" />
+                            <Setter TargetName="Pill" Property="Height" Value="16" />
+                            <Setter TargetName="Pill" Property="HorizontalAlignment" Value="Left" />
+                            <Setter TargetName="Pill" Property="VerticalAlignment" Value="Center" />
+                            <Setter TargetName="Pill" Property="Margin" Value="-12,0,0,0" />
+                            <Setter Property="Margin" Value="0,0,0,2" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </DataTrigger>
                         <Trigger Property="Icon" Value="Empty">
                             <Setter TargetName="IconElement" Property="Visibility" Value="Collapsed" />
                         </Trigger>
@@ -70,5 +80,16 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Vertical">
+                <Setter Property="ItemsPanel">
+                    <Setter.Value>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" />
+                        </ItemsPanelTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 </ResourceDictionary>
