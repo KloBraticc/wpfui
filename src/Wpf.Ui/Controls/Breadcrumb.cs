@@ -37,6 +37,12 @@ public class Breadcrumb : System.Windows.Controls.Control
     public static readonly DependencyProperty HeaderProperty = DependencyProperty.RegisterAttached("Header",
         typeof(string), typeof(Breadcrumb), new PropertyMetadata(null));
 
+    public static readonly DependencyProperty ShowsOriginProperty = DependencyProperty.RegisterAttached("ShowsOrigin",
+        typeof(bool), typeof(Breadcrumb), new PropertyMetadata(false));
+
+    private static readonly DependencyProperty PageHeaderProperty = DependencyProperty.Register("PageHeader",
+        typeof(string), typeof(Breadcrumb), new PropertyMetadata(String.Empty, OnPageHeaderChanged));
+
     public static readonly RoutedEvent BackRequestedEvent = EventManager.RegisterRoutedEvent("BackRequested",
         RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Breadcrumb));
 
@@ -47,6 +53,16 @@ public class Breadcrumb : System.Windows.Controls.Control
     private object? _parentContent;
 
     private Frame? _parentFrame;
+
+    private object? _content;
+
+    private string _pageName = String.Empty;
+
+    private INavigationItem? _lastItem;
+
+    private INavigationItem? _origin;
+
+    private bool _showingOrigin;
 
     public string Current
     {
@@ -77,6 +93,10 @@ public class Breadcrumb : System.Windows.Controls.Control
     public static string? GetHeader(DependencyObject element) => (string?)element.GetValue(HeaderProperty);
 
     public static void SetHeader(DependencyObject element, string? value) => element.SetValue(HeaderProperty, value);
+
+    public static bool GetShowsOrigin(DependencyObject element) => (bool)element.GetValue(ShowsOriginProperty);
+
+    public static void SetShowsOrigin(DependencyObject element, bool value) => element.SetValue(ShowsOriginProperty, value);
 
     public static void AddBackRequestedHandler(DependencyObject element, RoutedEventHandler handler)
     {
@@ -122,7 +142,27 @@ public class Breadcrumb : System.Windows.Controls.Control
         if (item?.Content is not string pageName || String.IsNullOrEmpty(pageName))
             return;
 
-        Current = pageName;
+        if (!ReferenceEquals(item, _lastItem))
+        {
+            _origin = _lastItem;
+            _lastItem = item;
+        }
+
+        _content = content;
+        _pageName = pageName;
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        if (String.IsNullOrEmpty(_pageName))
+            return;
+
+        string header = GetValue(PageHeaderProperty) as string ?? String.Empty;
+        string? origin = _origin?.Content as string;
+        _showingOrigin = header.Length == 0 && !String.IsNullOrEmpty(origin) && !ReferenceEquals(_origin, _lastItem) && _content is DependencyObject element && GetShowsOrigin(element);
+        Current = _showingOrigin ? origin! : _pageName;
+        SubPage = _showingOrigin ? _pageName : header;
     }
 
     private INavigationItem? FindItemForContent(object? content)
@@ -211,18 +251,19 @@ public class Breadcrumb : System.Windows.Controls.Control
 
     private void TrackContent(object? content)
     {
-        BindingOperations.ClearBinding(this, SubPageProperty);
+        BindingOperations.ClearBinding(this, PageHeaderProperty);
+        _content = content;
 
         if (content is DependencyObject element && (String.IsNullOrEmpty(GetHeader(element)) || IsNavigationPage(content)))
             _parentContent = content;
 
         if (content is DependencyObject page)
         {
-            SetBinding(SubPageProperty, new Binding { Source = page, Path = new PropertyPath(HeaderProperty), Mode = BindingMode.OneWay, FallbackValue = String.Empty, TargetNullValue = String.Empty });
+            SetBinding(PageHeaderProperty, new Binding { Source = page, Path = new PropertyPath(HeaderProperty), Mode = BindingMode.OneWay, FallbackValue = String.Empty, TargetNullValue = String.Empty });
             return;
         }
 
-        SubPage = String.Empty;
+        ClearValue(PageHeaderProperty);
     }
 
     private bool IsNavigationPage(object content) => Navigation?.Current is INavigationItem item && item.PageType != null && item.PageType == content.GetType();
@@ -231,6 +272,12 @@ public class Breadcrumb : System.Windows.Controls.Control
     {
         if (!HasSubPage)
             return;
+
+        if (_showingOrigin && _origin?.PageType != null && Navigation != null)
+        {
+            Navigation.Navigate(_origin.PageType);
+            return;
+        }
 
         if (_frame?.Content is UIElement current && ReferenceEquals(current, _parentContent))
         {
@@ -246,6 +293,12 @@ public class Breadcrumb : System.Windows.Controls.Control
 
         if (_frame?.CanGoBack == true)
             _frame.GoBack();
+    }
+
+    private static void OnPageHeaderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is Breadcrumb breadcrumb)
+            breadcrumb.Refresh();
     }
 
     private static void OnSubPageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
