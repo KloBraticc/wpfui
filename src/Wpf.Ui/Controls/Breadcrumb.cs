@@ -64,6 +64,10 @@ public class Breadcrumb : System.Windows.Controls.Control
 
     private bool _showingOrigin;
 
+    public event EventHandler? RootItemChanged;
+
+    public INavigationItem? RootItem { get; private set; }
+
     public string Current
     {
         get => (string)GetValue(CurrentProperty);
@@ -163,6 +167,12 @@ public class Breadcrumb : System.Windows.Controls.Control
         _showingOrigin = header.Length == 0 && !String.IsNullOrEmpty(origin) && !ReferenceEquals(_origin, _lastItem) && _content is DependencyObject element && GetShowsOrigin(element);
         Current = _showingOrigin ? origin! : _pageName;
         SubPage = _showingOrigin ? _pageName : header;
+        INavigationItem? root = _showingOrigin ? _origin : _lastItem;
+        if (ReferenceEquals(root, RootItem))
+            return;
+
+        RootItem = root;
+        RootItemChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private INavigationItem? FindItemForContent(object? content)
