@@ -133,11 +133,11 @@ public class Breadcrumb : System.Windows.Controls.Control
         Type type = content.GetType();
 
         foreach (INavigationControl control in Navigation.Items)
-            if (control is INavigationItem item && item.PageType == type)
+            if (control is INavigationItem item && item.PageType == type && (control is not UIElement element || element.Visibility == Visibility.Visible))
                 return item;
 
         foreach (INavigationControl control in Navigation.Footer)
-            if (control is INavigationItem item && item.PageType == type)
+            if (control is INavigationItem item && item.PageType == type && (control is not UIElement element || element.Visibility == Visibility.Visible))
                 return item;
 
         return null;
