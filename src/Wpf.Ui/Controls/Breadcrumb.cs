@@ -37,6 +37,9 @@ public class Breadcrumb : System.Windows.Controls.Control
     public static readonly DependencyProperty HeaderProperty = DependencyProperty.RegisterAttached("Header",
         typeof(string), typeof(Breadcrumb), new PropertyMetadata(null));
 
+    public static readonly DependencyProperty RootTitleProperty = DependencyProperty.RegisterAttached("RootTitle",
+        typeof(string), typeof(Breadcrumb), new PropertyMetadata(null));
+
     public static readonly DependencyProperty ShowsOriginProperty = DependencyProperty.RegisterAttached("ShowsOrigin",
         typeof(bool), typeof(Breadcrumb), new PropertyMetadata(false));
 
@@ -97,6 +100,10 @@ public class Breadcrumb : System.Windows.Controls.Control
     public static string? GetHeader(DependencyObject element) => (string?)element.GetValue(HeaderProperty);
 
     public static void SetHeader(DependencyObject element, string? value) => element.SetValue(HeaderProperty, value);
+
+    public static string? GetRootTitle(DependencyObject element) => (string?)element.GetValue(RootTitleProperty);
+
+    public static void SetRootTitle(DependencyObject element, string? value) => element.SetValue(RootTitleProperty, value);
 
     public static bool GetShowsOrigin(DependencyObject element) => (bool)element.GetValue(ShowsOriginProperty);
 
@@ -165,7 +172,8 @@ public class Breadcrumb : System.Windows.Controls.Control
         string header = GetValue(PageHeaderProperty) as string ?? String.Empty;
         string? origin = _origin?.Content as string;
         _showingOrigin = header.Length == 0 && !String.IsNullOrEmpty(origin) && !ReferenceEquals(_origin, _lastItem) && _content is DependencyObject element && GetShowsOrigin(element);
-        Current = _showingOrigin ? origin! : _pageName;
+        string? rootTitle = !_showingOrigin && header.Length > 0 && _content is DependencyObject titled ? GetRootTitle(titled) : null;
+        Current = _showingOrigin ? origin! : String.IsNullOrEmpty(rootTitle) ? _pageName : rootTitle;
         SubPage = _showingOrigin ? _pageName : header;
         INavigationItem? root = _showingOrigin ? _origin : _lastItem;
         if (ReferenceEquals(root, RootItem))
@@ -282,6 +290,12 @@ public class Breadcrumb : System.Windows.Controls.Control
     {
         if (!HasSubPage)
             return;
+
+        if (_frame?.Content is UIElement titled && !String.IsNullOrEmpty(GetRootTitle(titled)))
+        {
+            titled.RaiseEvent(new RoutedEventArgs(BackRequestedEvent, titled));
+            return;
+        }
 
         if (_showingOrigin && _origin?.PageType != null && Navigation != null)
         {
