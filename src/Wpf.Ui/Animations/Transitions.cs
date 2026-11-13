@@ -14,6 +14,8 @@ namespace Wpf.Ui.Animations
 
     public static class Transitions
     {
+        public static event EventHandler? AnimationStarted;
+
         public static readonly DependencyProperty HoldStillProperty = DependencyProperty.RegisterAttached("HoldStill", typeof(bool), typeof(Transitions), new PropertyMetadata(false, OnHoldStillChanged));
 
         private static readonly List<WeakReference<FrameworkElement>> HeldElements = new();
@@ -345,6 +347,7 @@ namespace Wpf.Ui.Animations
                 FillBehavior = FillBehavior.Stop
             };
             Timeline.SetDesiredFrameRate(animation, null);
+            AnimationStarted?.Invoke(target, EventArgs.Empty);
 
             long generation = NextGeneration(target);
             WeakReference<Animatable> weakTarget = new(target);
@@ -385,6 +388,7 @@ namespace Wpf.Ui.Animations
                 FillBehavior = FillBehavior.Stop
             };
             Timeline.SetDesiredFrameRate(animation, null);
+            AnimationStarted?.Invoke(target, EventArgs.Empty);
 
             long generation = NextGeneration(target);
             WeakReference<UIElement> weakTarget = new(target);
