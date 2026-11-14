@@ -71,7 +71,27 @@ public static class ComboBoxSearch
         box.Tag = combo;
         box.TextChanged += Box_TextChanged;
         box.PreviewKeyDown += Box_PreviewKeyDown;
+        PlayIntro(box);
         combo.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => box.Focus()));
+    }
+
+    private static void PlayIntro(System.Windows.Controls.TextBox box)
+    {
+        if (box.RenderTransform is not System.Windows.Media.TranslateTransform shift || shift.IsFrozen)
+        {
+            shift = new System.Windows.Media.TranslateTransform();
+            box.RenderTransform = shift;
+        }
+        var ease = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
+        var duration = new Duration(TimeSpan.FromMilliseconds(260));
+        shift.BeginAnimation(
+            System.Windows.Media.TranslateTransform.YProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(12, 0, duration) { EasingFunction = ease }
+        );
+        box.BeginAnimation(
+            UIElement.OpacityProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(0, 1, duration) { EasingFunction = ease }
+        );
     }
 
     private static void Combo_DropDownClosed(object? sender, EventArgs e)
