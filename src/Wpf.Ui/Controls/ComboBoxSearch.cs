@@ -71,11 +71,11 @@ public static class ComboBoxSearch
         box.Tag = combo;
         box.TextChanged += Box_TextChanged;
         box.PreviewKeyDown += Box_PreviewKeyDown;
-        PlayIntro(box);
+        PlayIntro(box.Parent as FrameworkElement ?? box);
         combo.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => box.Focus()));
     }
 
-    private static void PlayIntro(System.Windows.Controls.TextBox box)
+    private static void PlayIntro(FrameworkElement box)
     {
         if (box.RenderTransform is not System.Windows.Media.TranslateTransform shift || shift.IsFrozen)
         {
