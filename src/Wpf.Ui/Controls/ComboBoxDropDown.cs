@@ -31,11 +31,11 @@ public static class ComboBoxDropDown
 
     private static readonly TimeSpan OpacityChangeBeginTime = CloseDuration - OpacityChangeDuration;
 
-    private static readonly TimeSpan ShadowFadeInDelay = TimeSpan.FromMilliseconds(120);
+    private static readonly TimeSpan ShadowFadeInDelay = TimeSpan.FromMilliseconds(60);
 
-    private static readonly TimeSpan ShadowFadeInDuration = TimeSpan.FromMilliseconds(260);
+    private static readonly TimeSpan ShadowFadeInDuration = TimeSpan.FromMilliseconds(420);
 
-    private static readonly TimeSpan ShadowFadeOutDuration = TimeSpan.FromMilliseconds(90);
+    private static readonly TimeSpan ShadowFadeOutDuration = TimeSpan.FromMilliseconds(150);
 
     private static readonly KeySpline SplitSpline = Spline(0, 0, 0, 1);
 
@@ -309,13 +309,13 @@ public static class ComboBoxDropDown
             return;
         if (!opening)
         {
-            shadow.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, ShadowFadeOutDuration));
+            shadow.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, ShadowFadeOutDuration) { EasingFunction = new SineEase { EasingMode = EasingMode.EaseOut } });
             return;
         }
         DoubleAnimationUsingKeyFrames fade = new();
         fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
         fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(ShadowFadeInDelay)));
-        fade.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(ShadowFadeInDelay + ShadowFadeInDuration), new CubicEase { EasingMode = EasingMode.EaseOut }));
+        fade.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(ShadowFadeInDelay + ShadowFadeInDuration), new SineEase { EasingMode = EasingMode.EaseInOut }));
         shadow.BeginAnimation(UIElement.OpacityProperty, fade);
     }
 
