@@ -31,11 +31,11 @@ public static class ComboBoxDropDown
 
     private static readonly TimeSpan OpacityChangeBeginTime = CloseDuration - OpacityChangeDuration;
 
-    private static readonly TimeSpan ShadowFadeInDelay = TimeSpan.FromMilliseconds(60);
+    private static readonly TimeSpan ShadowFadeInDelay = TimeSpan.FromMilliseconds(40);
 
-    private static readonly TimeSpan ShadowFadeInDuration = TimeSpan.FromMilliseconds(420);
+    private static readonly TimeSpan ShadowFadeInDuration = TimeSpan.FromMilliseconds(220);
 
-    private static readonly TimeSpan ShadowFadeOutDuration = TimeSpan.FromMilliseconds(150);
+    private static readonly TimeSpan ShadowFadeOutDuration = TimeSpan.FromMilliseconds(100);
 
     private static readonly KeySpline SplitSpline = Spline(0, 0, 0, 1);
 
