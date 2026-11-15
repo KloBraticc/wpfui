@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -17,6 +17,8 @@ public static class ComboBoxDropDown
 
     private const string ChevronPartName = "ChevronGrid";
 
+    private const string ShadowPartName = "DropDownShadow";
+
     private const double ClosedRatio = 0.5;
 
     private const double ChevronVisualSize = 48;
@@ -28,6 +30,12 @@ public static class ComboBoxDropDown
     private static readonly TimeSpan OpacityChangeDuration = TimeSpan.FromMilliseconds(83);
 
     private static readonly TimeSpan OpacityChangeBeginTime = CloseDuration - OpacityChangeDuration;
+
+    private static readonly TimeSpan ShadowFadeInDelay = TimeSpan.FromMilliseconds(120);
+
+    private static readonly TimeSpan ShadowFadeInDuration = TimeSpan.FromMilliseconds(260);
+
+    private static readonly TimeSpan ShadowFadeOutDuration = TimeSpan.FromMilliseconds(90);
 
     private static readonly KeySpline SplitSpline = Spline(0, 0, 0, 1);
 
@@ -233,10 +241,14 @@ public static class ComboBoxDropDown
         _openComboBox = new WeakReference<ComboBox>(comboBox);
         comboBox.SetValue(SuppressReleaseProperty, Mouse.LeftButton == MouseButtonState.Pressed);
         if (!Motion)
+        {
+            Part<UIElement>(comboBox, ShadowPartName)?.BeginAnimation(UIElement.OpacityProperty, null);
             return;
+        }
         popup.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => Reposition(popup)));
         PlayChevronRelease(comboBox);
         AnimateFaceplate(comboBox, opening: true);
+        FadeShadow(comboBox, opening: true);
         if (Part<FrameworkElement>(comboBox, DropDownPartName) is FrameworkElement dropDown)
             dropDown.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => SafeSplit(comboBox, dropDown, opening: true)));
     }
@@ -286,8 +298,25 @@ public static class ComboBoxDropDown
         if (!Motion)
             return;
         AnimateFaceplate(comboBox, opening: false);
+        FadeShadow(comboBox, opening: false);
         if (Part<FrameworkElement>(comboBox, DropDownPartName) is FrameworkElement dropDown)
             SafeSplit(comboBox, dropDown, opening: false);
+    }
+
+    private static void FadeShadow(ComboBox comboBox, bool opening)
+    {
+        if (Part<UIElement>(comboBox, ShadowPartName) is not UIElement shadow)
+            return;
+        if (!opening)
+        {
+            shadow.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, ShadowFadeOutDuration));
+            return;
+        }
+        DoubleAnimationUsingKeyFrames fade = new();
+        fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(ShadowFadeInDelay)));
+        fade.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(ShadowFadeInDelay + ShadowFadeInDuration), new CubicEase { EasingMode = EasingMode.EaseOut }));
+        shadow.BeginAnimation(UIElement.OpacityProperty, fade);
     }
 
     private static void OnComboBoxPressed(object sender, MouseButtonEventArgs e)
