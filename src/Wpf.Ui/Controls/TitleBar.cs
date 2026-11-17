@@ -988,7 +988,8 @@ public class TitleBar : System.Windows.Controls.Control, IThemeControl
         Item("Minimize", Common.SymbolRegular.Subtract20, ShowMinimize && window.ResizeMode != ResizeMode.NoResize, () => OnTemplateButtonClick(this, "minimize"));
         Item("Maximize", Common.SymbolRegular.Square20, !maximized && canMaximize, () => OnTemplateButtonClick(this, "maximize"));
         menu.Items.Add(new System.Windows.Controls.Separator());
-        Item("Close", Common.SymbolRegular.Dismiss20, true, () => OnTemplateButtonClick(this, "close"), "Alt+F4");
+        System.Windows.Controls.MenuItem close = Item("Close", Common.SymbolRegular.Dismiss20, true, () => OnTemplateButtonClick(this, "close"), "Alt+F4");
+        close.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, "SystemFillColorCriticalBrush");
         if (screenPixels && PresentationSource.FromVisual(window) is { CompositionTarget: { } target })
             screenPoint = target.TransformFromDevice.Transform(screenPoint);
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint;
